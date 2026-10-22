@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AquaTrack - Premium Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js Add Chesamu -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -20,7 +21,7 @@
 
         /* Glassmorphism Classes */
         .glass {
-            background: rgba(25, 25, 25, 0.5);
+            background: rgba(25, 25, 25, 0.6);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -29,7 +30,7 @@
         }
 
         /* Sidebar */
-        .sidebar { width: 250px; padding: 20px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); z-index: 10; overflow-y: auto; }
+        .sidebar { width: 250px; padding: 20px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); z-index: 10; overflow-y: auto; }
         .logo { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 30px; color: #fff; }
         .logo span { color: #ff7b00; }
         .nav-item { padding: 12px 15px; border-radius: 12px; cursor: pointer; color: #b3b3b3; transition: 0.3s; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 12px; text-decoration: none; }
@@ -53,9 +54,14 @@
         .stat-card.alerts { border-bottom: 3px solid #ff4757; }
         .stat-card.rev { border-bottom: 3px solid #ff7b00; }
 
+        /* Charts Row */
+        .charts-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .chart-box { padding: 20px; display: flex; flex-direction: column; }
+        .chart-box h2 { font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #fff;}
+
         /* Tables Layout */
         .tables-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .table-box { padding: 20px; display: flex; flex-direction: column; max-height: 400px; }
+        .table-box { padding: 20px; display: flex; flex-direction: column; max-height: 350px; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .table-header h2 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
 
@@ -136,6 +142,20 @@
         </div>
     </div>
 
+    <!-- Charts Row (NEW) -->
+    <div class="charts-container">
+        <div class="glass chart-box">
+            <h2>📊 Monthly Consumption (High/Low)</h2>
+            <canvas id="barChart" height="120"></canvas>
+        </div>
+        <div class="glass chart-box">
+            <h2>🥧 Bill Payment Status</h2>
+            <div style="position: relative; height: 200px; display: flex; justify-content: center;">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Tables Row -->
     <div class="tables-container">
         <!-- Bills Table -->
@@ -212,7 +232,13 @@
             document.getElementById('totalAlerts').textContent = alerts.length;
 
             const billRes = await fetch('/api/bills'); const bills = await billRes.json();
-            const revenue = bills.reduce((sum, b) => sum + b.totalAmount, 0);
+            let revenue = 0, paidCount = 0, unpaidCount = 0;
+
+            bills.forEach(b => {
+                revenue += b.totalAmount;
+                if(b.status === 'PAID') paidCount++;
+                else unpaidCount++;
+            });
             document.getElementById('totalRevenue').textContent = '₹' + revenue.toFixed(0);
 
             const bTable = document.getElementById('billsTableBody');
@@ -249,7 +275,64 @@
                 `).join('');
             } else { rTable.innerHTML = '<tr><td colspan="5" style="text-align:center;">No readings found.</td></tr>'; }
 
+            // Draw Charts
+            renderBarChart(readings);
+            renderPieChart(paidCount, unpaidCount);
+
         } catch (error) { console.error("Error:", error); }
+    }
+
+    function renderBarChart(readings) {
+        const ctx = document.getElementById('barChart').getContext('2d');
+        const recentReadings = readings.slice(0, 7).reverse(); // Top 7
+        const labels = recentReadings.map(r => r.property ? r.property.propertyNo : 'Prop ' + r.id);
+        const data = recentReadings.map(r => r.unitsConsumed);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Usage (kL)',
+                    data: data,
+                    backgroundColor: '#00d2ff',
+                    borderRadius: 6,
+                    barThickness: 25
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#b3b3b3' } },
+                    x: { grid: { display: false }, ticks: { color: '#b3b3b3' } }
+                }
+            }
+        });
+    }
+
+    function renderPieChart(paid, unpaid) {
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Unpaid'],
+                datasets: [{
+                    data: [paid, unpaid],
+                    backgroundColor: ['#00ff87', '#ff4757'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#b3b3b3' } }
+                }
+            }
+        });
     }
 
     function logout() { localStorage.removeItem("user"); window.location.href = "/login.html"; }
