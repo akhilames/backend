@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
-public class BillingService {   // <--- Class name correct ga BillingService ga undi
+public class BillingService {
 
     @Autowired private BillRepository billRepository;
     @Autowired private PropertyRepository propertyRepository;
@@ -27,7 +27,6 @@ public class BillingService {   // <--- Class name correct ga BillingService ga 
                 .orElseThrow(() -> new RuntimeException("Meter Reading not found"));
 
         double units = reading.getUnitsConsumed();
-
         double waterCharges = units * 10.0;
         double fixedCharges = 100.0;
 
@@ -37,6 +36,8 @@ public class BillingService {   // <--- Class name correct ga BillingService ga 
         bill.setBillingMonth(month);
         bill.setBillDate(billDate);
         bill.setDueDate(dueDate);
+
+        // Random bill number, so no duplicates
         bill.setBillNumber("BILL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         bill.setWaterCharges(waterCharges);
