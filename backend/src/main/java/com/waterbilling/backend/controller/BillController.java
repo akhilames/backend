@@ -23,8 +23,6 @@ public class BillController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllBills() {
         List<Bill> bills = billRepository.findAll();
-
-        // Jackson Infinite Loop ni aapadaniki Map use chestunnam
         List<Map<String, Object>> response = bills.stream().map(b -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", b.getId());
@@ -32,18 +30,9 @@ public class BillController {
             map.put("billingMonth", b.getBillingMonth());
             map.put("totalAmount", b.getTotalAmount());
             map.put("status", b.getStatus());
-            map.put("waterCharges", b.getWaterCharges());
-            map.put("fixedCharges", b.getFixedCharges());
-
-            // Property Number matrame theesukuntunnam
-            if (b.getProperty() != null) {
-                map.put("property", Map.of("propertyNo", b.getProperty().getPropertyNo()));
-            } else {
-                map.put("property", null);
-            }
+            if (b.getProperty() != null) map.put("property", Map.of("propertyNo", b.getProperty().getPropertyNo()));
             return map;
         }).collect(Collectors.toList());
-
         return ResponseEntity.ok(response);
     }
 
@@ -55,11 +44,17 @@ public class BillController {
             String month = request.get("month");
             LocalDate billDate = LocalDate.parse(request.get("billDate"));
             LocalDate dueDate = LocalDate.parse(request.get("dueDate"));
-
             Bill bill = billingService.generateBill(propertyId, readingId, month, billDate, dueDate);
             return ResponseEntity.ok(Map.of("message", "Bill generated successfully", "billId", bill.getId()));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("message", "Failed: " + e.getMessage()));
         }
+    }
+
+    // NEW: DELETE BILL
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBill(@PathVariable Long id) {
+        billRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Bill deleted successfully"));
     }
 }

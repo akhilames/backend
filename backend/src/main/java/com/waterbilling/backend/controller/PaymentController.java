@@ -1,7 +1,9 @@
 package com.waterbilling.backend.controller;
 
 import com.waterbilling.backend.entity.Payment;
+import com.waterbilling.backend.repository.PaymentRepository;
 import com.waterbilling.backend.service.PaymentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,57 +14,30 @@ import java.util.Map;
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    @Autowired private PaymentService paymentService;
+    @Autowired private PaymentRepository paymentRepository;
 
-    public PaymentController(PaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
+    @GetMapping
+    public List<Payment> getAllPayments() { return paymentService.getAllPayments(); }
 
     @PostMapping
-    public ResponseEntity<Payment> makePayment(
-            @RequestBody Map<String, String> request) {
-
-        Payment payment = paymentService.makePayment(
-                Long.parseLong(request.get("billId")),
-                Double.parseDouble(request.get("amount")),
-                request.get("paymentMethod")
-        );
-
+    public ResponseEntity<?> makePayment(@RequestBody Map<String, String> request) {
+        Payment payment = paymentService.makePayment(Long.parseLong(request.get("billId")), Double.parseDouble(request.get("amount")), request.get("paymentMethod"));
         return ResponseEntity.ok(payment);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Payment>> getAllPayments() {
-
-        return ResponseEntity.ok(
-                paymentService.getAllPayments()
-        );
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        Payment payment = paymentRepository.findById(id).orElseThrow();
+        payment.setAmount(Double.parseDouble(request.get("amount")));
+        payment.setPaymentMethod(request.get("paymentMethod"));
+        paymentRepository.save(payment);
+        return ResponseEntity.ok(Map.of("message", "Payment updated"));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Payment> getPaymentById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                paymentService.getPaymentById(id)
-        );
-    }
-
-    @GetMapping("/resident/{residentId}")
-    public ResponseEntity<List<Payment>> getPaymentsByResident(
-            @PathVariable Long residentId) {
-
-        return ResponseEntity.ok(
-                paymentService.getPaymentsByResident(residentId)
-        );
-    }
-
-    @GetMapping("/bill/{billId}")
-    public ResponseEntity<List<Payment>> getPaymentsByBill(
-            @PathVariable Long billId) {
-
-        return ResponseEntity.ok(
-                paymentService.getPaymentsByBill(billId)
-        );
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePayment(@PathVariable Long id) {
+        paymentRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Payment deleted"));
     }
 }

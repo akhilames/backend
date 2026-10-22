@@ -1,7 +1,10 @@
 package com.waterbilling.backend.controller;
 
 import com.waterbilling.backend.entity.Property;
-import com.waterbilling.backend.service.PropertyService;
+import com.waterbilling.backend.entity.Resident;
+import com.waterbilling.backend.repository.PropertyRepository;
+import com.waterbilling.backend.repository.ResidentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,83 +15,44 @@ import java.util.Map;
 @RequestMapping("/api/properties")
 public class PropertyController {
 
-    private final PropertyService propertyService;
-
-    public PropertyController(PropertyService propertyService) {
-        this.propertyService = propertyService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Property> createProperty(
-            @RequestBody Map<String, String> request) {
-
-        Double flatSize = null;
-        Integer occupancy = null;
-
-        if (request.get("flatSize") != null
-                && !request.get("flatSize").isBlank()) {
-
-            flatSize = Double.parseDouble(
-                    request.get("flatSize")
-            );
-        }
-
-        if (request.get("occupancy") != null
-                && !request.get("occupancy").isBlank()) {
-
-            occupancy = Integer.parseInt(
-                    request.get("occupancy")
-            );
-        }
-
-        Property property = propertyService.createProperty(
-                request.get("propertyNo"),
-                request.get("address"),
-                request.get("meterNumber"),
-                Long.parseLong(request.get("residentId")),
-                flatSize,
-                occupancy
-        );
-
-        return ResponseEntity.ok(property);
-    }
+    @Autowired private PropertyRepository propertyRepository;
+    @Autowired private ResidentRepository residentRepository;
 
     @GetMapping
-    public ResponseEntity<List<Property>> getAllProperties() {
-        return ResponseEntity.ok(
-                propertyService.getAllProperties()
-        );
+    public List<Property> getAllProperties() { return propertyRepository.findAll(); }
+
+    @PostMapping
+    public ResponseEntity<?> createProperty(@RequestBody Map<String, String> request) {
+        Property property = new Property();
+        property.setPropertyNo(request.get("propertyNo"));
+        property.setAddress(request.get("address"));
+        property.setMeterNumber(request.get("meterNumber"));
+        property.setFlatSize(Double.parseDouble(request.get("flatSize")));
+        property.setOccupancy(Integer.parseInt(request.get("occupancy")));
+        if (request.get("residentId") != null && !request.get("residentId").isEmpty()) {
+            Resident resident = residentRepository.findById(Long.parseLong(request.get("residentId"))).orElse(null);
+            property.setResident(resident);
+        }
+        propertyRepository.save(property);
+        return ResponseEntity.ok(Map.of("message", "Property created"));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Property> getPropertyById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                propertyService.getPropertyById(id)
-        );
-    }
-
-    @GetMapping("/resident/{residentId}")
-    public ResponseEntity<List<Property>> getPropertiesByResident(
-            @PathVariable Long residentId) {
-
-        return ResponseEntity.ok(
-                propertyService.getPropertiesByResident(residentId)
-        );
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProperty(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        try {
+            Property property = propertyRepository.findById(id).orElseThrow();
+            property.setPropertyNo(request.get("propertyNo"));
+            property.setAddress(request.get("address"));
+            property.setFlatSize(Double.parseDouble(request.get("flatSize")));
+            property.setOccupancy(Integer.parseInt(request.get("occupancy")));
+            propertyRepository.save(property);
+            return ResponseEntity.ok(Map.of("message", "Property updated"));
+        } catch (Exception e) { return ResponseEntity.status(500).body(Map.of("message", e.getMessage())); }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProperty(
-            @PathVariable Long id) {
-
-        propertyService.deleteProperty(id);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "Property deleted successfully"
-                )
-        );
+    public ResponseEntity<?> deleteProperty(@PathVariable Long id) {
+        propertyRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Property deleted"));
     }
 }

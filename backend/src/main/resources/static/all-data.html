@@ -10,99 +10,150 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         h1 { color: #1a5276; margin: 0; }
         .btn { padding: 10px 15px; background: #2980b9; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .btn:hover { background: #1a5276; }
         .section { background: white; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .section h2 { margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; font-size: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; font-size: 14px; }
         th { background: #f8f9fa; color: #7f8c8d; font-weight: 600; text-transform: uppercase; font-size: 12px; }
         tr:hover { background: #f1f5f9; }
         .status-PAID { color: #27ae60; font-weight: bold; }
         .status-UNPAID { color: #e74c3c; font-weight: bold; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
-        .badge-green { background: #27ae60; }
-        .badge-red { background: #e74c3c; }
-        .badge-blue { background: #2980b9; }
+        .btn-edit { background: #f39c12; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .btn-edit:hover { background: #d68910; }
+        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-del:hover { background: #c0392b; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📊 AquaTrack - System Overview</h1>
+        <h1>📊 AquaTrack - Admin Control Panel</h1>
         <a href="/admin-dashboard.html" class="btn">← Back to Dashboard</a>
     </div>
+    <p style="color: #7f8c8d; margin-bottom: 20px;">Ikkada nunchi data Add, Edit, Delete chesukovachu.</p>
 
-    <p style="color: #7f8c8d; margin-bottom: 20px;">This page displays the live database records demonstrating the complete end-to-end flow of the Water Billing System.</p>
-
+    <!-- Properties -->
     <div class="section">
-        <h2>🏢 Properties & Residents</h2>
+        <h2>🏢 Properties</h2>
         <table id="propertiesTable">
-            <thead><tr><th>ID</th><th>Property No</th><th>Meter No</th><th>Address</th><th>Flat Size (sqft)</th></tr></thead>
+            <thead><tr><th>ID</th><th>Property No</th><th>Address</th><th>Flat Size</th><th>Action</th></tr></thead>
             <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
         </table>
     </div>
 
+    <!-- Meter Readings -->
     <div class="section">
-        <h2>📝 Meter Readings (Consumption Logs)</h2>
+        <h2>📝 Meter Readings</h2>
         <table id="readingsTable">
-            <thead><tr><th>ID</th><th>Property</th><th>Reading Date</th><th>Previous</th><th>Current</th><th>Units Consumed (kL)</th></tr></thead>
+            <thead><tr><th>ID</th><th>Property</th><th>Date</th><th>Units</th><th>Action</th></tr></thead>
+            <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+        </table>
+    </div>
+
+    <!-- Bills -->
+    <div class="section">
+        <h2>💰 Bills</h2>
+        <table id="billsTable">
+            <thead><tr><th>Bill No</th><th>Month</th><th>Total Amt</th><th>Status</th><th>Invoice</th><th>Action</th></tr></thead>
             <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
         </table>
     </div>
 
+    <!-- Payments -->
     <div class="section">
-        <h2>💰 Generated Bills</h2>
-        <table id="billsTable">
-            <thead><tr><th>Bill No</th><th>Billing Month</th><th>Water Charges</th><th>Fixed Charges</th><th>Total Amt</th><th>Status</th><th>Invoice</th></tr></thead>
-            <tbody><tr><td colspan="7">Loading...</td></tr></tbody>
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>💳 Payments History</h2>
+        <h2>💳 Payments</h2>
         <table id="paymentsTable">
-            <thead><tr><th>Transaction ID</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
-            <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+            <thead><tr><th>Transaction ID</th><th>Amount</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody><tr><td colspan="4">Loading...</td></tr></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // Fetch Properties
+    // --- Edit Functions (Prompt Use Chestunnam) ---
+    function editProp(id, pNo, addr, size) {
+        let newPNo = prompt("Enter new Property No:", pNo);
+        let newAddr = prompt("Enter new Address:", addr);
+        let newSize = prompt("Enter new Flat Size:", size);
+        if(newPNo && newAddr && newSize) {
+            fetch('/api/properties/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({propertyNo: newPNo, address: newAddr, flatSize: newSize, occupancy: 4}) })
+            .then(() => location.reload());
+        }
+    }
+
+    function editReading(id, prev, curr) {
+        let newPrev = prompt("Enter new Previous Reading:", prev);
+        let newCurr = prompt("Enter new Current Reading:", curr);
+        if(newPrev && newCurr) {
+            fetch('/api/meter-readings/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({previousReading: newPrev, currentReading: newCurr}) })
+            .then(() => location.reload());
+        }
+    }
+
+    function editBill(id, month, status) {
+        let newMonth = prompt("Enter new Billing Month:", month);
+        let newStatus = prompt("Enter Status (PAID / UNPAID):", status);
+        if(newMonth && newStatus) {
+            fetch('/api/bills/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({billingMonth: newMonth, status: newStatus}) })
+            .then(() => location.reload());
+        }
+    }
+
+    function editPayment(id, amt, method) {
+        let newAmt = prompt("Enter new Amount:", amt);
+        let newMethod = prompt("Enter Payment Method:", method);
+        if(newAmt && newMethod) {
+            fetch('/api/payments/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({amount: newAmt, paymentMethod: newMethod}) })
+            .then(() => location.reload());
+        }
+    }
+
+    // --- Delete Functions ---
+    function delProp(id) { if(confirm('Delete this Property?')) fetch('/api/properties/'+id, {method:'DELETE'}).then(()=>location.reload()); }
+    function delReading(id) { if(confirm('Delete this Reading?')) fetch('/api/meter-readings/'+id, {method:'DELETE'}).then(()=>location.reload()); }
+    function delBill(id) { if(confirm('Delete this Bill?')) fetch('/api/bills/'+id, {method:'DELETE'}).then(()=>location.reload()); }
+    function delPayment(id) { if(confirm('Delete this Payment?')) fetch('/api/payments/'+id, {method:'DELETE'}).then(()=>location.reload()); }
+
+    // --- Load Data ---
     fetch('/api/properties').then(r => r.json()).then(data => {
         document.querySelector('#propertiesTable tbody').innerHTML = data.map(p => `
-            <tr><td>${p.id}</td><td>${p.propertyNo}</td><td>${p.meterNumber}</td><td>${p.address}</td><td>${p.flatSize}</td></tr>
+            <tr><td>${p.id}</td><td>${p.propertyNo}</td><td>${p.address}</td><td>${p.flatSize}</td>
+            <td>
+                <button class="btn-edit" onclick="editProp(${p.id}, '${p.propertyNo}', '${p.address}', ${p.flatSize})">Edit</button>
+                <button class="btn-del" onclick="delProp(${p.id})">Delete</button>
+            </td></tr>
         `).join('');
-    }).catch(() => document.querySelector('#propertiesTable tbody').innerHTML = '<tr><td colspan="5">Error loading data.</td></tr>');
+    });
 
-    // Fetch Meter Readings
     fetch('/api/meter-readings').then(r => r.json()).then(data => {
         document.querySelector('#readingsTable tbody').innerHTML = data.map(r => `
-            <tr><td>${r.id}</td><td>Prop ${r.property?.propertyNo || 'N/A'}</td><td>${r.readingDate}</td><td>${r.previousReading}</td><td>${r.currentReading}</td><td><strong>${r.unitsConsumed}</strong></td></tr>
+            <tr><td>${r.id}</td><td>Prop ${r.property?.propertyNo || 'N/A'}</td><td>${r.readingDate}</td><td>${r.unitsConsumed}</td>
+            <td>
+                <button class="btn-edit" onclick="editReading(${r.id}, ${r.previousReading}, ${r.currentReading})">Edit</button>
+                <button class="btn-del" onclick="delReading(${r.id})">Delete</button>
+            </td></tr>
         `).join('');
-    }).catch(() => document.querySelector('#readingsTable tbody').innerHTML = '<tr><td colspan="6">Error loading data.</td></tr>');
+    });
 
-    // Fetch Bills
     fetch('/api/bills').then(r => r.json()).then(data => {
         document.querySelector('#billsTable tbody').innerHTML = data.map(b => `
-            <tr>
-                <td>${b.billNumber}</td>
-                <td>${b.billingMonth}</td>
-                <td>₹${b.waterCharges}</td>
-                <td>₹${b.fixedCharges}</td>
-                <td><strong>₹${b.totalAmount}</strong></td>
-                <td><span class="status-${b.status}">${b.status}</span></td>
-                <td><a href="/api/invoices/${b.id}/pdf" target="_blank" style="color:#2980b9; font-weight:bold; text-decoration:none;">PDF</a></td>
-            </tr>
+            <tr><td>${b.billNumber}</td><td>${b.billingMonth}</td><td>₹${b.totalAmount}</td><td class="status-${b.status}">${b.status}</td>
+            <td><a href="/api/invoices/${b.id}/pdf" target="_blank">PDF</a></td>
+            <td>
+                <button class="btn-edit" onclick="editBill(${b.id}, '${b.billingMonth}', '${b.status}')">Edit</button>
+                <button class="btn-del" onclick="delBill(${b.id})">Delete</button>
+            </td></tr>
         `).join('');
-    }).catch(() => document.querySelector('#billsTable tbody').innerHTML = '<tr><td colspan="7">Error loading data.</td></tr>');
+    });
 
-    // Fetch Payments
     fetch('/api/payments').then(r => r.json()).then(data => {
         document.querySelector('#paymentsTable tbody').innerHTML = data.map(p => `
-            <tr><td>${p.transactionId}</td><td>₹${p.amount}</td><td>${p.paymentMethod}</td><td>${p.paymentDate.substring(0,10)}</td><td><span class="badge badge-green">${p.status}</span></td></tr>
+            <tr><td>${p.transactionId}</td><td>₹${p.amount}</td><td>${p.paymentDate.substring(0,10)}</td>
+            <td>
+                <button class="btn-edit" onclick="editPayment(${p.id}, ${p.amount}, '${p.paymentMethod}')">Edit</button>
+                <button class="btn-del" onclick="delPayment(${p.id})">Delete</button>
+            </td></tr>
         `).join('');
-    }).catch(() => document.querySelector('#paymentsTable tbody').innerHTML = '<tr><td colspan="5">Error loading data.</td></tr>');
+    });
 </script>
 </body>
 </html>
