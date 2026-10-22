@@ -23,18 +23,41 @@ public class PropertyController {
 
     @PostMapping
     public ResponseEntity<?> createProperty(@RequestBody Map<String, String> request) {
-        Property property = new Property();
-        property.setPropertyNo(request.get("propertyNo"));
-        property.setAddress(request.get("address"));
-        property.setMeterNumber(request.get("meterNumber"));
-        property.setFlatSize(Double.parseDouble(request.get("flatSize")));
-        property.setOccupancy(Integer.parseInt(request.get("occupancy")));
-        if (request.get("residentId") != null && !request.get("residentId").isEmpty()) {
-            Resident resident = residentRepository.findById(Long.parseLong(request.get("residentId"))).orElse(null);
-            property.setResident(resident);
+        try {
+            // Ikkada final variables create chesam (idi lambda error fix chestundi)
+            final String reqPropNo = request.get("propertyNo");
+            final String reqMeterNo = request.get("meterNumber");
+
+            // Duplicate check
+            boolean isDuplicate = propertyRepository.findAll().stream()
+                    .anyMatch(p -> p.getPropertyNo().equalsIgnoreCase(reqPropNo) || p.getMeterNumber().equalsIgnoreCase(reqMeterNo));
+
+            String finalPropNo = reqPropNo;
+            String finalMeterNo = reqMeterNo;
+
+            // Oka vela ade peru unte, automatic ga venaka random number add chestundi
+            if (isDuplicate) {
+                int rand = (int)(Math.random() * 1000);
+                finalPropNo = reqPropNo + "-" + rand;
+                finalMeterNo = reqMeterNo + "-" + rand;
+            }
+
+            Property property = new Property();
+            property.setPropertyNo(finalPropNo);
+            property.setAddress(request.get("address"));
+            property.setMeterNumber(finalMeterNo);
+            property.setFlatSize(Double.parseDouble(request.get("flatSize")));
+            property.setOccupancy(Integer.parseInt(request.get("occupancy")));
+
+            if (request.get("residentId") != null && !request.get("residentId").isEmpty()) {
+                Resident resident = residentRepository.findById(Long.parseLong(request.get("residentId"))).orElse(null);
+                property.setResident(resident);
+            }
+            propertyRepository.save(property);
+            return ResponseEntity.ok(Map.of("message", "Property created successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "Failed: " + e.getMessage()));
         }
-        propertyRepository.save(property);
-        return ResponseEntity.ok(Map.of("message", "Property created"));
     }
 
     @PutMapping("/{id}")
@@ -47,12 +70,18 @@ public class PropertyController {
             property.setOccupancy(Integer.parseInt(request.get("occupancy")));
             propertyRepository.save(property);
             return ResponseEntity.ok(Map.of("message", "Property updated"));
-        } catch (Exception e) { return ResponseEntity.status(500).body(Map.of("message", e.getMessage())); }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProperty(@PathVariable Long id) {
-        propertyRepository.deleteById(id);
-        return ResponseEntity.ok(Map.of("message", "Property deleted"));
+        try {
+            propertyRepository.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "Property deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "Cannot delete property (might have linked records)"));
+        }
     }
 }

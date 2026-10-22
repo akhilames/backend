@@ -1,104 +1,51 @@
 package com.waterbilling.backend.service;
 
 import com.waterbilling.backend.entity.Property;
-import com.waterbilling.backend.entity.Resident;
 import com.waterbilling.backend.repository.PropertyRepository;
-import com.waterbilling.backend.repository.ResidentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PropertyService {
 
-    private final PropertyRepository propertyRepository;
-    private final ResidentRepository residentRepository;
+    @Autowired
+    private PropertyRepository propertyRepository;
 
-    public PropertyService(
-            PropertyRepository propertyRepository,
-            ResidentRepository residentRepository) {
-        this.propertyRepository = propertyRepository;
-        this.residentRepository = residentRepository;
-    }
-
-    public Property createProperty(
-            String propertyNo,
-            String address,
-            String meterNumber,
-            Long residentId) {
-
-        return createProperty(
-                propertyNo,
-                address,
-                meterNumber,
-                residentId,
-                null,
-                null
-        );
-    }
-
-    public Property createProperty(
-            String propertyNo,
-            String address,
-            String meterNumber,
-            Long residentId,
-            Double flatSize,
-            Integer occupancy) {
-
-        if (propertyRepository.findByPropertyNo(propertyNo).isPresent()) {
-            throw new RuntimeException("Property number already exists");
-        }
-
-        if (propertyRepository.findByMeterNumber(meterNumber).isPresent()) {
-            throw new RuntimeException("Meter number already exists");
-        }
-
-        Resident resident = residentRepository.findById(residentId)
-                .orElseThrow(() -> new RuntimeException("Resident not found"));
-
-        if (flatSize != null && flatSize <= 0) {
-            throw new RuntimeException("Flat size must be greater than zero");
-        }
-
-        if (occupancy != null && occupancy <= 0) {
-            throw new RuntimeException("Occupancy must be greater than zero");
-        }
-
-        Property property = new Property();
-
-        property.setPropertyNo(propertyNo);
-        property.setAddress(address);
-        property.setMeterNumber(meterNumber);
-        property.setResident(resident);
-        property.setFlatSize(flatSize);
-        property.setOccupancy(occupancy);
-
-        return propertyRepository.save(property);
-    }
-
+    // Get all properties
     public List<Property> getAllProperties() {
         return propertyRepository.findAll();
     }
 
-    public Property getPropertyById(Long id) {
-        return propertyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Property not found"));
+    // Get property by ID
+    public Optional<Property> getPropertyById(Long id) {
+        return propertyRepository.findById(id);
     }
 
-    public List<Property> getPropertiesByResident(Long residentId) {
-
-        Resident resident = residentRepository.findById(residentId)
-                .orElseThrow(() -> new RuntimeException("Resident not found"));
-
-        return propertyRepository.findByResident(resident);
+    // Save a new property or update existing
+    public Property saveProperty(Property property) {
+        return propertyRepository.save(property);
     }
 
+    // Update property details
+    public Property updateProperty(Long id, Property propertyDetails) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
+
+        property.setPropertyNo(propertyDetails.getPropertyNo());
+        property.setAddress(propertyDetails.getAddress());
+        property.setMeterNumber(propertyDetails.getMeterNumber());
+        property.setFlatSize(propertyDetails.getFlatSize());
+        property.setOccupancy(propertyDetails.getOccupancy());
+        property.setResident(propertyDetails.getResident());
+
+        return propertyRepository.save(property);
+    }
+
+    // Delete property
     public void deleteProperty(Long id) {
-
-        if (!propertyRepository.existsById(id)) {
-            throw new RuntimeException("Property not found");
-        }
-
         propertyRepository.deleteById(id);
     }
 }
