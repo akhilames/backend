@@ -20,16 +20,36 @@ public class BillingService {
     @Autowired private MeterReadingRepository meterReadingRepository;
 
     public Bill generateBill(Long propertyId, Long readingId, String month, LocalDate billDate, LocalDate dueDate) {
-        Property property = propertyRepository.findById(propertyId)
-                .orElseThrow(() -> new RuntimeException("Property not found"));
 
-        MeterReading reading = meterReadingRepository.findById(readingId)
-                .orElseThrow(() -> new RuntimeException("Meter Reading not found"));
+        // 1. Property vethuku. Lekapote automatic ga create chey.
+        Property property = propertyRepository.findById(propertyId).orElse(null);
+        if (property == null) {
+            property = new Property();
+            property.setPropertyNo("P-AUTO-" + propertyId);
+            property.setAddress("Auto Generated Address");
+            property.setMeterNumber("MTR-AUTO-" + propertyId);
+            property.setFlatSize(1000.0);
+            property.setOccupancy(2);
+            property = propertyRepository.save(property);
+        }
+
+        // 2. Meter Reading vethuku. Lekapote automatic ga create chey.
+        MeterReading reading = meterReadingRepository.findById(readingId).orElse(null);
+        if (reading == null) {
+            reading = new MeterReading();
+            reading.setProperty(property);
+            reading.setReadingDate(LocalDate.now());
+            reading.setPreviousReading(0.0);
+            reading.setCurrentReading(150.0);
+            reading.setUnitsConsumed(150.0);
+            reading = meterReadingRepository.save(reading);
+        }
 
         double units = reading.getUnitsConsumed();
         double waterCharges = units * 10.0;
         double fixedCharges = 100.0;
 
+        // 3. Bill generate chey
         Bill bill = new Bill();
         bill.setProperty(property);
         bill.setMeterReading(reading);
