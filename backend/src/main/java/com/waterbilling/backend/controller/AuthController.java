@@ -4,7 +4,6 @@ import com.waterbilling.backend.entity.Resident;
 import com.waterbilling.backend.entity.User;
 import com.waterbilling.backend.service.UserService;
 import com.waterbilling.backend.repository.ResidentRepository;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,68 +17,40 @@ public class AuthController {
     private final UserService userService;
     private final ResidentRepository residentRepository;
 
-    public AuthController(
-            UserService userService,
-            ResidentRepository residentRepository) {
-
+    public AuthController(UserService userService, ResidentRepository residentRepository) {
         this.userService = userService;
         this.residentRepository = residentRepository;
     }
 
-    @PostMapping("/register/commercial-admin")
-    public ResponseEntity<?> registerCommercialAdmin(
-            @RequestBody Map<String, String> request) {
-
-        User user = userService.registerCommercialAdmin(
-                request.get("username"),
-                request.get("password"),
-                request.get("name"),
-                request.get("email")
-        );
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "Commercial Admin registered successfully. Waiting for approval.",
-                        "username",
-                        user.getUsername(),
-                        "status",
-                        user.getStatus()
-                )
-        );
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody Map<String, String> request) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+        try {
+            String username = request.get("username");
+            String password = request.get("password");
 
-        User user = userService.login(
-                request.get("username"),
-                request.get("password")
-        );
+            User user = userService.login(username, password);
 
-        Map<String, Object> response = new HashMap<>();
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Login successful");
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("name", user.getName() != null ? user.getName() : user.getUsername());
+            response.put("role", user.getRole() != null ? user.getRole().getName() : "ADMIN");
+            response.put("status", user.getStatus());
 
-        response.put("message", "Login successful");
-        response.put("id", user.getId());
-        response.put("username", user.getUsername());
-        response.put("name", user.getName());
-        response.put("role", user.getRole().getName());  // ← FIXED: .name() → .getName()
-        response.put("status", user.getStatus());
+            if (user.getRole() != null && "RESIDENT".equals(user.getRole().getName())) {
+                Resident resident = residentRepository.findByUsername(user.getUsername()).orElse(null);
+                if (resident != null) {
+                    response.put("residentId", resident.getId());
+                }
+            }
 
-        // ← FIXED: Role is entity, compare by name string
-        if (user.getRole() != null
-                && "RESIDENT".equals(user.getRole().getName())) {
+            return ResponseEntity.ok(response);
 
-            Resident resident = residentRepository
-                    .findByUsername(user.getUsername())
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Resident record not found"));
-
-            response.put("residentId", resident.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // If error occurs, send exact error message to frontend
+            return ResponseEntity.status(500).body(Map.of("message", "Backend Error: " + e.getMessage()));
         }
-
-        return ResponseEntity.ok(response);
     }
 }
