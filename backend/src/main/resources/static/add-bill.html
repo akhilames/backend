@@ -1,360 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Generate Bill</title>
-
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-            background: #f5f6f8;
-        }
-
-        h1 {
-            color: #222;
-        }
-
-        .form-box,
-        .bill-box {
-            background: white;
-            padding: 25px;
-            margin-top: 20px;
-            border-radius: 10px;
-            max-width: 700px;
-        }
-
-        label {
-            display: block;
-            margin-top: 15px;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 10px 18px;
-            border: none;
-            border-radius: 6px;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        .back {
-            background: #6b7280;
-            margin-left: 8px;
-        }
-
-        .bill-box {
-            display: none;
-        }
-
-        .bill-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .total {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-
-        .success {
-            color: green;
-            font-weight: bold;
-        }
-
-        .error {
-            color: red;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; background: #f4f7fa; padding: 30px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2980b9; margin-bottom: 20px; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .btn { margin-top: 20px; padding: 12px 20px; background: #2980b9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .btn:hover { background: #1a5276; }
+        .msg { margin-top: 15px; font-weight: bold; color: red; text-align: center;}
     </style>
-
 </head>
-
 <body>
-
-<h1>Generate Bill</h1>
-
-<div class="form-box">
-
+<div class="container">
+    <h2>Generate Bill</h2>
     <form id="billForm">
+        <label for="propertyId">Property ID:</label>
+        <input type="number" id="propertyId" required placeholder="e.g. 1">
 
-        <label for="propertyId">
-            Property ID:
-        </label>
+        <label for="readingId">Meter Reading ID:</label>
+        <input type="number" id="readingId" required placeholder="e.g. 1">
 
-        <input
-                type="number"
-                id="propertyId"
-                required
-        >
+        <label for="month">Billing Month:</label>
+        <input type="text" id="month" required placeholder="e.g. October 2026">
 
+        <label for="billDate">Bill Date:</label>
+        <input type="date" id="billDate" required>
 
-        <label for="meterReadingId">
-            Meter Reading ID:
-        </label>
+        <label for="dueDate">Due Date:</label>
+        <input type="date" id="dueDate" required>
 
-        <input
-                type="number"
-                id="meterReadingId"
-                required
-        >
-
-
-        <label for="billingMonth">
-            Billing Month:
-        </label>
-
-        <input
-                type="text"
-                id="billingMonth"
-                placeholder="July 2026"
-                required
-        >
-
-
-        <label for="billDate">
-            Bill Date:
-        </label>
-
-        <input
-                type="date"
-                id="billDate"
-                required
-        >
-
-
-        <label for="dueDate">
-            Due Date:
-        </label>
-
-        <input
-                type="date"
-                id="dueDate"
-                required
-        >
-
-
-        <button type="submit">
-            Generate Bill
-        </button>
-
-        <button
-                type="button"
-                class="back"
-                onclick="window.location.href='/admin-dashboard.html'">
-
-            Back to Dashboard
-
-        </button>
-
+        <button type="submit" class="btn">Generate Bill</button>
+        <div id="msg" class="msg"></div>
     </form>
-
-    <p id="message"></p>
-
 </div>
-
-
-<div class="bill-box" id="billBox">
-
-    <h2>Generated Bill</h2>
-
-    <div class="bill-row">
-        <strong>Bill Number</strong>
-        <span id="billNumber"></span>
-    </div>
-
-    <div class="bill-row">
-        <strong>Billing Month</strong>
-        <span id="billingMonthResult"></span>
-    </div>
-
-    <div class="bill-row">
-        <strong>Property</strong>
-        <span id="propertyResult"></span>
-    </div>
-
-    <div class="bill-row">
-        <strong>Water Charges</strong>
-        <span id="waterCharges"></span>
-    </div>
-
-    <div class="bill-row">
-        <strong>Fixed Charges</strong>
-        <span id="fixedCharges"></span>
-    </div>
-
-    <div class="bill-row">
-        <strong>Shared Cost</strong>
-        <span id="sharedCost"></span>
-    </div>
-
-    <div class="bill-row total">
-        <strong>Total Amount</strong>
-        <span id="totalAmount"></span>
-    </div>
-
-    <div class="bill-row">
-        <strong>Status</strong>
-        <span id="billStatus"></span>
-    </div>
-
-</div>
-
 
 <script>
+    document.getElementById('billForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Page refresh avvakunda aaputhundi
 
-    document.getElementById("billForm")
-        .addEventListener("submit", async function(event) {
+        // Form nunchi values theesukovadam
+        const propertyId = document.getElementById('propertyId').value;
+        const readingId = document.getElementById('readingId').value;
+        const month = document.getElementById('month').value;
+        const billDate = document.getElementById('billDate').value; // Default ga YYYY-MM-DD vasthundi
+        const dueDate = document.getElementById('dueDate').value;
 
-            event.preventDefault();
+        const msgDiv = document.getElementById('msg');
+        msgDiv.textContent = "Generating bill...";
+        msgDiv.style.color = "blue";
 
-            const message =
-                document.getElementById("message");
+        try {
+            const response = await fetch('/api/bills/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    propertyId: propertyId,
+                    readingId: readingId,
+                    month: month,
+                    billDate: billDate,
+                    dueDate: dueDate
+                })
+            });
 
-            message.className = "";
+            const data = await response.json();
 
-            message.textContent =
-                "Generating bill...";
-
-
-            const request = {
-
-                propertyId:
-                    document.getElementById("propertyId").value,
-
-                meterReadingId:
-                    document.getElementById("meterReadingId").value,
-
-                billingMonth:
-                    document.getElementById("billingMonth").value,
-
-                billDate:
-                    document.getElementById("billDate").value,
-
-                dueDate:
-                    document.getElementById("dueDate").value
-            };
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/bills/generate",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-
-                            body: JSON.stringify(request)
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.message ||
-                        "Failed to generate bill"
-                    );
-                }
-
-
-                message.className =
-                    "success";
-
-                message.textContent =
-                    "Bill generated successfully!";
-
-
-                document.getElementById("billNumber")
-                    .textContent =
-                    data.billNumber;
-
-                document.getElementById("billingMonthResult")
-                    .textContent =
-                    data.billingMonth;
-
-                document.getElementById("propertyResult")
-                    .textContent =
-                    data.property.propertyNo;
-
-                document.getElementById("waterCharges")
-                    .textContent =
-                    "₹" + Number(data.waterCharges)
-                        .toFixed(2);
-
-                document.getElementById("fixedCharges")
-                    .textContent =
-                    "₹" + Number(data.fixedCharges)
-                        .toFixed(2);
-
-                document.getElementById("sharedCost")
-                    .textContent =
-                    "₹" + Number(data.sharedCost)
-                        .toFixed(2);
-
-                document.getElementById("totalAmount")
-                    .textContent =
-                    "₹" + Number(data.totalAmount)
-                        .toFixed(2);
-
-                document.getElementById("billStatus")
-                    .textContent =
-                    data.status;
-
-
-                document.getElementById("billBox")
-                    .style.display = "block";
-
-
-                document.getElementById("billForm")
-                    .reset();
-
-
-            } catch (error) {
-
-                console.error(error);
-
-                message.className =
-                    "error";
-
-                message.textContent =
-                    error.message ||
-                    "Server connection failed";
+            if (response.ok) {
+                msgDiv.style.color = "green";
+                msgDiv.textContent = "✅ Bill Generated Successfully!";
+                setTimeout(() => { window.location.href = '/admin-dashboard.html'; }, 1500);
+            } else {
+                msgDiv.style.color = "red";
+                msgDiv.textContent = "Failed: " + data.message;
             }
-
-        });
-
+        } catch (error) {
+            msgDiv.style.color = "red";
+            msgDiv.textContent = "Network Error. Please try again.";
+            console.error(error);
+        }
+    });
 </script>
-
 </body>
-
 </html>

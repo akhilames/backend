@@ -9,7 +9,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { display: flex; background: #f4f7fa; height: 100vh; overflow: hidden; color: #333; }
 
-        /* Sidebar */
         .sidebar { width: 260px; background: #1e293b; color: white; display: flex; flex-direction: column; overflow-y: auto; }
         .logo { padding: 20px; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
         .logo span { color: #38bdf8; }
@@ -20,16 +19,13 @@
         .nav-item.logout { color: #f87171; font-weight: 600; margin-top: 10px; }
         .nav-item.logout:hover { background: #7f1d1d; color: white; }
 
-        /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
         .topbar { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
         .topbar h1 { font-size: 20px; font-weight: 600; color: #1e293b; }
         .user-info { display: flex; align-items: center; gap: 15px; font-weight: 500; }
 
-        /* Dashboard Grid */
         .dashboard-container { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
 
-        /* Quick Actions */
         .quick-actions { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
         .action-btn { padding: 12px 20px; border-radius: 8px; background: #2980b9; color: white; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: none; cursor: pointer; }
         .action-btn:hover { background: #1a5276; transform: translateY(-2px); }
@@ -38,7 +34,6 @@
         .action-btn.pay { background: #f39c12; }
         .action-btn.pay:hover { background: #d68910; }
 
-        /* Stat Cards */
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border-left: 4px solid #38bdf8; }
         .stat-card h3 { font-size: 14px; color: #64748b; font-weight: 500; margin-bottom: 10px; }
@@ -47,7 +42,6 @@
         .stat-card.households { border-left-color: #10b981; }
         .stat-card.usage { border-left-color: #8b5cf6; }
 
-        /* Tables */
         .table-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); width: 100%; margin-bottom: 20px;}
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
         .table-header h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin: 0; }
@@ -61,7 +55,6 @@
         .status.PAID { background: #dcfce7; color: #166534; }
         .status.UNPAID { background: #fee2e2; color: #991b1b; }
 
-        /* Action Buttons */
         .btn-sm { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
         .btn-add { background: #27ae60; color: white; }
         .btn-add:hover { background: #1e8449; }
@@ -74,17 +67,14 @@
 </head>
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
     <div class="logo">💧 <span>AquaTrack</span></div>
-
     <div class="nav-section">
         <div class="nav-title">Main Menu</div>
         <a href="/admin-dashboard.html" class="nav-item" style="background:#334155; color:white;">📊 Dashboard</a>
         <a href="/all-data.html" class="nav-item">📄 All Data Overview</a>
         <a href="/alerts.html" class="nav-item">🔔 Alerts</a>
     </div>
-
     <div class="nav-section">
         <div class="nav-title">Quick Add</div>
         <a href="/add-resident.html" class="nav-item">👤 Add Resident</a>
@@ -92,13 +82,11 @@
         <a href="/water-purchase.html" class="nav-item">🚰 Water Purchase</a>
         <a href="/shared-cost.html" class="nav-item">📊 Shared Cost</a>
     </div>
-
     <div class="nav-section">
         <a class="nav-item logout" onclick="logout()">🚪 Logout</a>
     </div>
 </div>
 
-<!-- Main Content -->
 <div class="main-content">
     <div class="topbar">
         <h1>Dashboard Overview</h1>
@@ -108,14 +96,13 @@
     </div>
 
     <div class="dashboard-container">
-        <!-- Quick Actions Row (Ivi direct ga forms ki velthayi) -->
         <div class="quick-actions">
+            <!-- Ikkada direct ga add-bill.html ki velthundi, prompt radu -->
             <a href="/add-bill.html" class="action-btn bill">💰 Generate New Bill</a>
             <a href="/add-payment.html" class="action-btn pay">💳 Pay Bill</a>
             <a href="/add-resident.html" class="action-btn">➕ Add New Resident</a>
         </div>
 
-        <!-- Stats -->
         <div class="stats-row">
             <div class="stat-card">
                 <h3>Total Properties</h3>
@@ -135,46 +122,27 @@
             </div>
         </div>
 
-        <!-- Bills Table -->
         <div class="table-box">
             <div class="table-header">
                 <h3>💰 All Bills & Payment Status</h3>
-                <!-- Direct ga add-bill.html ki velthundi -->
                 <a href="/add-bill.html" class="btn-sm btn-add">➕ Add New Bill</a>
             </div>
             <table id="billsTable">
                 <thead>
-                <tr>
-                    <th>Bill ID</th>
-                    <th>Property</th>
-                    <th>Month</th>
-                    <th>Total Amount</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th>Bill ID</th><th>Property</th><th>Month</th><th>Total Amount</th><th>Status</th><th>Action</th></tr>
                 </thead>
                 <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
             </table>
         </div>
 
-        <!-- Meter Readings Table -->
         <div class="table-box">
             <div class="table-header">
                 <h3>📝 All Meter Readings</h3>
-                <!-- Direct ga add-meter-reading.html ki velthundi -->
                 <a href="/add-meter-reading.html" class="btn-sm btn-add">➕ Add New Reading</a>
             </div>
             <table id="logsTable">
                 <thead>
-                <tr>
-                    <th>Log ID</th>
-                    <th>Property</th>
-                    <th>Date</th>
-                    <th>Prev</th>
-                    <th>Current</th>
-                    <th>Consumption (kL)</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th>Log ID</th><th>Property</th><th>Date</th><th>Prev</th><th>Current</th><th>Consumption (kL)</th><th>Action</th></tr>
                 </thead>
                 <tbody><tr><td colspan="7">Loading...</td></tr></tbody>
             </table>
@@ -187,7 +155,7 @@
     if (!user) { window.location.href = "/login.html"; }
     else { document.getElementById("welcomeName").textContent = user.username || "Admin"; }
 
-    // Edit Functions (Edit, Delete matrame ikkada unnayi)
+    // Edit and Delete Functions Only (No Add Prompt)
     function editBill(id, month, status) {
         let newMonth = prompt("Enter new Billing Month:", month);
         let newStatus = prompt("Enter Status (PAID / UNPAID):", status);
@@ -207,7 +175,6 @@
     function delBill(id) { if(confirm('Delete this Bill?')) fetch('/api/bills/'+id, {method:'DELETE'}).then(()=>location.reload()); }
     function delReading(id) { if(confirm('Delete this Reading?')) fetch('/api/meter-readings/'+id, {method:'DELETE'}).then(()=>location.reload()); }
 
-    // Load Data
     async function loadDashboard() {
         try {
             const propRes = await fetch('/api/properties'); const properties = await propRes.json();
