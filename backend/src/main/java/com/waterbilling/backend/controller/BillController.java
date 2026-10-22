@@ -37,27 +37,20 @@ public class BillController {
     @PostMapping("/generate")
     public ResponseEntity<?> generateBill(@RequestBody Map<String, String> request) {
         try {
-            // Values null ga unte check cheyyadam
-            if (request.get("propertyId") == null || request.get("propertyId").isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Property ID is missing"));
-            }
-            if (request.get("readingId") == null || request.get("readingId").isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Reading ID is missing"));
-            }
-            if (request.get("billDate") == null || request.get("billDate").isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Bill Date is missing"));
-            }
-            if (request.get("dueDate") == null || request.get("dueDate").isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Due Date is missing"));
-            }
-
             Long propertyId = Long.parseLong(request.get("propertyId"));
             Long readingId = Long.parseLong(request.get("readingId"));
             String month = request.get("month");
 
-            // Date format correct ga unda chuddam (YYYY-MM-DD)
-            LocalDate billDate = LocalDate.parse(request.get("billDate"));
-            LocalDate dueDate = LocalDate.parse(request.get("dueDate"));
+            // Error fix: Date parse chesetappudu crash avvakunda handle cheyyadam
+            LocalDate billDate = LocalDate.now();
+            LocalDate dueDate = LocalDate.now().plusDays(10);
+
+            if (request.get("billDate") != null && !request.get("billDate").isEmpty()) {
+                billDate = LocalDate.parse(request.get("billDate"));
+            }
+            if (request.get("dueDate") != null && !request.get("dueDate").isEmpty()) {
+                dueDate = LocalDate.parse(request.get("dueDate"));
+            }
 
             Bill bill = billingService.generateBill(propertyId, readingId, month, billDate, dueDate);
             return ResponseEntity.ok(Map.of("message", "Bill generated successfully", "billId", bill.getId()));
