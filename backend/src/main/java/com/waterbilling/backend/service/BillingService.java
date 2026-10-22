@@ -37,7 +37,6 @@ public class BillingService {
         bill.setBillDate(billDate);
         bill.setDueDate(dueDate);
 
-        // Random bill number, so no duplicates
         bill.setBillNumber("BILL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         bill.setWaterCharges(waterCharges);

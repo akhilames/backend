@@ -26,9 +26,6 @@ public class SharedCostAllocationService {
         BillingCycle cycle = cycleRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Cycle not found"));
 
-        // No FINALIZED status check. It works even if the cycle is OPEN.
-
-        // Instead of custom repo method, we fetch all and filter
         List<WaterPurchase> allPurchases = purchaseRepository.findAll();
         List<WaterPurchase> purchases = allPurchases.stream()
                 .filter(p -> p.getBillingCycle() != null && p.getBillingCycle().getId().equals(cycleId))
@@ -46,7 +43,6 @@ public class SharedCostAllocationService {
             if (totalFlatSize > 0) {
                 share = (property.getFlatSize() != null ? property.getFlatSize() : 0) / totalFlatSize * totalCost;
             } else {
-                // If no flat size provided, divide equally
                 share = totalCost / properties.size();
             }
 
@@ -58,5 +54,11 @@ public class SharedCostAllocationService {
 
             allocationRepository.save(allocation);
         }
+    }
+
+    public List<SharedCostAllocation> getAllocationsByBillingCycle(Long cycleId) {
+        return allocationRepository.findAll().stream()
+                .filter(a -> a.getBillingCycle() != null && a.getBillingCycle().getId().equals(cycleId))
+                .collect(Collectors.toList());
     }
 }
