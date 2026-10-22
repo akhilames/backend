@@ -29,7 +29,16 @@
         /* Dashboard Grid */
         .dashboard-container { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
 
-        /* Stats */
+        /* Quick Actions */
+        .quick-actions { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+        .action-btn { padding: 12px 20px; border-radius: 8px; background: #2980b9; color: white; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: none; cursor: pointer; }
+        .action-btn:hover { background: #1a5276; transform: translateY(-2px); }
+        .action-btn.bill { background: #27ae60; }
+        .action-btn.bill:hover { background: #1e8449; }
+        .action-btn.pay { background: #f39c12; }
+        .action-btn.pay:hover { background: #d68910; }
+
+        /* Stat Cards */
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border-left: 4px solid #38bdf8; }
         .stat-card h3 { font-size: 14px; color: #64748b; font-weight: 500; margin-bottom: 10px; }
@@ -39,9 +48,9 @@
         .stat-card.usage { border-left-color: #8b5cf6; }
 
         /* Tables */
-        .section-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
-        .section-header h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin: 0; }
+        .table-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); width: 100%; margin-bottom: 20px;}
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+        .table-header h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin: 0; }
 
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px; font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
@@ -52,17 +61,12 @@
         .status.PAID { background: #dcfce7; color: #166534; }
         .status.UNPAID { background: #fee2e2; color: #991b1b; }
 
-        /* Buttons */
-        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        /* Action Buttons */
+        .btn-sm { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
         .btn-add { background: #27ae60; color: white; }
-        .btn-add:hover { background: #1e8449; }
         .btn-edit { background: #f39c12; color: white; margin-right: 5px; }
-        .btn-edit:hover { background: #d68910; }
         .btn-del { background: #e74c3c; color: white; }
-        .btn-del:hover { background: #c0392b; }
-        .btn-pay { background: #3498db; color: white; margin-left: 5px; }
-        .btn-pay:hover { background: #2980b9; }
-
+        .btn-pdf { background: #34495e; color: white; margin-right: 5px;}
     </style>
 </head>
 <body>
@@ -101,6 +105,13 @@
     </div>
 
     <div class="dashboard-container">
+        <!-- Quick Actions Row -->
+        <div class="quick-actions">
+            <button onclick="addBill()" class="action-btn bill">💰 Generate New Bill</button>
+            <button onclick="addPayment()" class="action-btn pay">💳 Pay Bill</button>
+            <a href="/add-resident.html" class="action-btn">➕ Add New Resident</a>
+        </div>
+
         <!-- Stats -->
         <div class="stats-row">
             <div class="stat-card">
@@ -121,11 +132,11 @@
             </div>
         </div>
 
-        <!-- All Bills Table -->
-        <div class="section-box">
-            <div class="section-header">
+        <!-- Bills Table (All data with Edit/Delete) -->
+        <div class="table-box">
+            <div class="table-header">
                 <h3>💰 All Bills & Payment Status</h3>
-                <button class="btn btn-add" onclick="addBill()">➕ Generate New Bill</button>
+                <button class="btn-sm btn-add" onclick="addBill()">➕ Add New Bill</button>
             </div>
             <table id="billsTable">
                 <thead>
@@ -142,11 +153,11 @@
             </table>
         </div>
 
-        <!-- All Meter Readings Table -->
-        <div class="section-box">
-            <div class="section-header">
+        <!-- Meter Readings Table (All data with Edit/Delete) -->
+        <div class="table-box">
+            <div class="table-header">
                 <h3>📝 All Meter Readings</h3>
-                <button class="btn btn-add" onclick="addReading()">➕ Add New Reading</button>
+                <button class="btn-sm btn-add" onclick="addReading()">➕ Add New Reading</button>
             </div>
             <table id="logsTable">
                 <thead>
@@ -171,19 +182,16 @@
     if (!user) { window.location.href = "/login.html"; }
     else { document.getElementById("welcomeName").textContent = user.username || "Admin"; }
 
-    // --- Add Functions ---
+    // Add Functions (using prompts)
     function addBill() {
         let propId = prompt("Enter Property ID:");
         let readingId = prompt("Enter Meter Reading ID:");
         let month = prompt("Enter Billing Month (e.g., Nov 2026):");
         let billDate = prompt("Enter Bill Date (YYYY-MM-DD):");
         let dueDate = prompt("Enter Due Date (YYYY-MM-DD):");
-
         if(propId && readingId && month && billDate && dueDate) {
-            fetch('/api/bills/generate', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({propertyId: propId, readingId: readingId, month: month, billDate: billDate, dueDate: dueDate})
-            }).then(res => { if(res.ok) { alert("Bill Generated!"); location.reload(); } else { alert("Failed."); } });
+            fetch('/api/bills/generate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({propertyId: propId, readingId: readingId, month: month, billDate: billDate, dueDate: dueDate}) })
+            .then(res => { if(res.ok) { alert("Bill Generated!"); location.reload(); } else { alert("Failed."); } });
         }
     }
 
@@ -192,22 +200,28 @@
         let prev = prompt("Enter Previous Reading:");
         let curr = prompt("Enter Current Reading:");
         let date = prompt("Enter Date (YYYY-MM-DD):");
-
         if(propId && prev && curr && date) {
-            fetch('/api/meter-readings', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({propertyId: propId, previousReading: prev, currentReading: curr, readingDate: date})
-            }).then(res => { if(res.ok) { alert("Reading Added!"); location.reload(); } else { alert("Failed."); } });
+            fetch('/api/meter-readings', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({propertyId: propId, previousReading: prev, currentReading: curr, readingDate: date}) })
+            .then(res => { if(res.ok) { alert("Reading Added!"); location.reload(); } else { alert("Failed."); } });
         }
     }
 
-    // --- Edit Functions ---
+    function addPayment() {
+        let billId = prompt("Enter Bill ID:");
+        let amount = prompt("Enter Amount:");
+        let method = prompt("Enter Method (UPI/Cash):");
+        if(billId && amount && method) {
+            fetch('/api/payments', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({billId: billId, amount: amount, paymentMethod: method}) })
+            .then(res => { if(res.ok) { alert("Payment Success!"); location.reload(); } else { alert("Failed."); } });
+        }
+    }
+
+    // Edit Functions
     function editBill(id, month, status) {
         let newMonth = prompt("Enter new Billing Month:", month);
         let newStatus = prompt("Enter Status (PAID / UNPAID):", status);
         if(newMonth && newStatus) {
-            fetch('/api/bills/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({billingMonth: newMonth, status: newStatus}) })
-            .then(() => location.reload());
+            fetch('/api/bills/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({billingMonth: newMonth, status: newStatus}) }).then(() => location.reload());
         }
     }
 
@@ -215,36 +229,31 @@
         let newPrev = prompt("Enter new Previous Reading:", prev);
         let newCurr = prompt("Enter new Current Reading:", curr);
         if(newPrev && newCurr) {
-            fetch('/api/meter-readings/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({previousReading: newPrev, currentReading: newCurr}) })
-            .then(() => location.reload());
+            fetch('/api/meter-readings/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({previousReading: newPrev, currentReading: newCurr}) }).then(() => location.reload());
         }
     }
 
-    // --- Delete Functions ---
+    // Delete Functions
     function delBill(id) { if(confirm('Delete this Bill?')) fetch('/api/bills/'+id, {method:'DELETE'}).then(()=>location.reload()); }
     function delReading(id) { if(confirm('Delete this Reading?')) fetch('/api/meter-readings/'+id, {method:'DELETE'}).then(()=>location.reload()); }
 
-    // --- Load Data ---
+    // Load Data
     async function loadDashboard() {
         try {
-            const propRes = await fetch('/api/properties');
-            const properties = await propRes.json();
+            const propRes = await fetch('/api/properties'); const properties = await propRes.json();
             document.getElementById('totalProperties').textContent = properties.length;
 
-            const resRes = await fetch('/api/residents');
-            const residents = await resRes.json();
+            const resRes = await fetch('/api/residents'); const residents = await resRes.json();
             document.getElementById('totalResidents').textContent = residents.length;
 
-            const alertRes = await fetch('/api/alerts');
-            const alerts = await alertRes.json();
+            const alertRes = await fetch('/api/alerts'); const alerts = await alertRes.json();
             document.getElementById('totalAlerts').textContent = alerts.length;
 
-            const billRes = await fetch('/api/bills');
-            const bills = await billRes.json();
+            const billRes = await fetch('/api/bills'); const bills = await billRes.json();
             const revenue = bills.reduce((sum, b) => sum + b.totalAmount, 0);
             document.getElementById('totalRevenue').textContent = '₹' + revenue.toFixed(0);
 
-            // Render ALL Bills (No slice)
+            // Render ALL Bills
             const bTable = document.querySelector('#billsTable tbody');
             if(bills.length > 0) {
                 bTable.innerHTML = bills.reverse().map(b => `
@@ -255,9 +264,9 @@
                         <td>₹${b.totalAmount}</td>
                         <td><span class="status ${b.status}">${b.status}</span></td>
                         <td>
-                            <a href="/api/invoices/${b.id}/pdf" target="_blank" class="btn btn-pay" style="background:#34495e;">PDF</a>
-                            <button class="btn btn-edit" onclick="editBill(${b.id}, '${b.billingMonth}', '${b.status}')">Edit</button>
-                            <button class="btn btn-del" onclick="delBill(${b.id})">Delete</button>
+                            <a href="/api/invoices/${b.id}/pdf" target="_blank" class="btn-sm btn-pdf">PDF</a>
+                            <button class="btn-sm btn-edit" onclick="editBill(${b.id}, '${b.billingMonth}', '${b.status}')">Edit</button>
+                            <button class="btn-sm btn-del" onclick="delBill(${b.id})">Delete</button>
                         </td>
                     </tr>
                 `).join('');
@@ -265,11 +274,10 @@
                 bTable.innerHTML = '<tr><td colspan="6">No bills generated yet.</td></tr>';
             }
 
-            const readRes = await fetch('/api/meter-readings');
-            const readings = await readRes.json();
+            // Render ALL Readings
+            const readRes = await fetch('/api/meter-readings'); const readings = await readRes.json();
             const rTable = document.querySelector('#logsTable tbody');
 
-            // Render ALL Readings (No slice)
             if(readings.length > 0) {
                 rTable.innerHTML = readings.reverse().map(r => `
                     <tr>
@@ -280,18 +288,15 @@
                         <td>${r.currentReading}</td>
                         <td><strong>${r.unitsConsumed}</strong></td>
                         <td>
-                            <button class="btn btn-edit" onclick="editReading(${r.id}, ${r.previousReading}, ${r.currentReading})">Edit</button>
-                            <button class="btn btn-del" onclick="delReading(${r.id})">Delete</button>
+                            <button class="btn-sm btn-edit" onclick="editReading(${r.id}, ${r.previousReading}, ${r.currentReading})">Edit</button>
+                            <button class="btn-sm btn-del" onclick="delReading(${r.id})">Delete</button>
                         </td>
                     </tr>
                 `).join('');
             } else {
                 rTable.innerHTML = '<tr><td colspan="7">No meter readings found.</td></tr>';
             }
-
-        } catch (error) {
-            console.error("Error:", error);
-        }
+        } catch (error) { console.error("Error:", error); }
     }
 
     function logout() { localStorage.removeItem("user"); window.location.href = "/login.html"; }
