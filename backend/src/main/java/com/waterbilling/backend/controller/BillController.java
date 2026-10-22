@@ -37,11 +37,21 @@ public class BillController {
     @PostMapping("/generate")
     public ResponseEntity<?> generateBill(@RequestBody Map<String, String> request) {
         try {
-            Long propertyId = Long.parseLong(request.get("propertyId"));
-            Long readingId = Long.parseLong(request.get("readingId"));
+            // Values null ga unte check cheyyadam
+            String propIdStr = request.get("propertyId");
+            String readIdStr = request.get("readingId");
+
+            if (propIdStr == null || propIdStr.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Property ID is missing. Please enter a number."));
+            }
+            if (readIdStr == null || readIdStr.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Reading ID is missing. Please enter a number."));
+            }
+
+            Long propertyId = Long.parseLong(propIdStr);
+            Long readingId = Long.parseLong(readIdStr);
             String month = request.get("month");
 
-            // Error fix: Date parse chesetappudu crash avvakunda handle cheyyadam
             LocalDate billDate = LocalDate.now();
             LocalDate dueDate = LocalDate.now().plusDays(10);
 
@@ -55,6 +65,8 @@ public class BillController {
             Bill bill = billingService.generateBill(propertyId, readingId, month, billDate, dueDate);
             return ResponseEntity.ok(Map.of("message", "Bill generated successfully", "billId", bill.getId()));
 
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "IDs must be numbers."));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("message", e.getMessage()));
         }
