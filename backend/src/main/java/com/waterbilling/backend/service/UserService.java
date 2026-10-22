@@ -16,11 +16,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(
-            UserRepository userRepository,
-            RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder) {
-
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -32,27 +28,23 @@ public class UserService {
     }
 
     public User registerCommercialAdmin(String username, String password, String name, String email) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username already exists");
-        }
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setName(name);
         user.setEmail(email);
         user.setRole(getRole("COMMERCIAL_ADMIN"));
-        user.setStatus("APPROVED"); // Auto approved for demo
+        user.setStatus("APPROVED");
         return userRepository.save(user);
     }
 
     // ==========================================
-    // UPDATED LOGIN METHOD (Bypasses password check)
+    // UPDATED LOGIN METHOD (Auto-Creates User)
     // ==========================================
     public User login(String username, String password) {
-
         User user = userRepository.findByUsername(username).orElse(null);
 
-        // If user does not exist, create them automatically so login never fails
+        // User DB lo lekapothe, automatic ga create chestundi
         if (user == null) {
             User newUser = new User();
             newUser.setUsername(username);
@@ -60,7 +52,7 @@ public class UserService {
             newUser.setName(username);
             newUser.setEmail(username + "@demo.com");
 
-            // Smartly assign role based on the username typed
+            // Username lo resident unte Resident role, lekapothe Admin role
             if (username.toLowerCase().contains("resident")) {
                 newUser.setRole(getRole("RESIDENT"));
             } else {
@@ -71,28 +63,21 @@ public class UserService {
             return userRepository.save(newUser);
         }
 
-        // If user exists, DO NOT check password. Just let them in!
+        // User unte password check cheyyadu, direct ga login cheyistundi (Demo kosam)
         return user;
     }
 
     public User approveCommercialAdmin(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow();
         user.setStatus("APPROVED");
         return userRepository.save(user);
     }
 
     public List<User> getPendingCommercialAdmins() {
-        return userRepository.findAll()
-                .stream()
-                .filter(user -> "PENDING".equals(user.getStatus()))
-                .toList();
+        return userRepository.findAll().stream().filter(u -> "PENDING".equals(u.getStatus())).toList();
     }
 
     public User createResident(String username, String password, String name, String email) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username already exists");
-        }
         User resident = new User();
         resident.setUsername(username);
         resident.setPassword(passwordEncoder.encode(password));
