@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Billing Cycle Management</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f6f8;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .box {
+            background: white;
+            padding: 25px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 10px 5px 5px 0;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .back {
+            background: #6b7280;
+        }
+
+        .back:hover {
+            background: #4b5563;
+        }
+
+        .finalize {
+            background: #f59e0b;
+        }
+
+        .archive {
+            background: #7c3aed;
+        }
+
+        .cycle-card {
+            border: 1px solid #ddd;
+            padding: 18px;
+            margin-top: 15px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<h1>Billing Cycle Management</h1>
+
+
+<div class="box">
+
+    <h2>Create Billing Cycle</h2>
+
+    <form id="cycleForm">
+
+        <label for="cycleName">
+            Cycle Name
+        </label>
+
+        <input
+                type="text"
+                id="cycleName"
+                placeholder="Example: October 2026"
+                required
+        >
+
+
+        <label for="startDate">
+            Start Date
+        </label>
+
+        <input
+                type="date"
+                id="startDate"
+                required
+        >
+
+
+        <label for="endDate">
+            End Date
+        </label>
+
+        <input
+                type="date"
+                id="endDate"
+                required
+        >
+
+
+        <br>
+
+        <button type="submit">
+            Create Billing Cycle
+        </button>
+
+        <button
+                type="button"
+                class="back"
+                onclick="window.location.href='/admin-dashboard.html'">
+
+            Back to Dashboard
+
+        </button>
+
+    </form>
+
+    <p id="message"></p>
+
+</div>
+
+
+<div class="box">
+
+    <h2>Billing Cycles</h2>
+
+    <button onclick="loadBillingCycles()">
+        View Billing Cycles
+    </button>
+
+    <div id="cycleList"></div>
+
+</div>
+
+
+<script>
+
+    // =========================
+    // CREATE BILLING CYCLE
+    // =========================
+
+    document.getElementById("cycleForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const message =
+                document.getElementById("message");
+
+            const cycleName =
+                document.getElementById("cycleName")
+                    .value.trim();
+
+            const startDate =
+                document.getElementById("startDate")
+                    .value;
+
+            const endDate =
+                document.getElementById("endDate")
+                    .value;
+
+
+            message.textContent =
+                "Creating billing cycle...";
+
+
+            try {
+
+                const response =
+                    await fetch("/api/billing-cycles", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            cycleName: cycleName,
+                            startDate: startDate,
+                            endDate: endDate
+
+                        })
+
+                    });
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to create billing cycle"
+                    );
+                }
+
+
+                message.textContent =
+                    "Billing cycle created successfully.";
+
+                document.getElementById("cycleForm")
+                    .reset();
+
+                loadBillingCycles();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    error.message ||
+                    "Failed to create billing cycle";
+            }
+
+        });
+
+
+    // =========================
+    // LOAD BILLING CYCLES
+    // =========================
+
+    async function loadBillingCycles() {
+
+        const list =
+            document.getElementById("cycleList");
+
+        list.innerHTML =
+            "<p>Loading billing cycles...</p>";
+
+
+        try {
+
+            const response =
+                await fetch("/api/billing-cycles");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load billing cycles"
+                );
+            }
+
+
+            const cycles =
+                await response.json();
+
+
+            if (cycles.length === 0) {
+
+                list.innerHTML =
+                    "<p>No billing cycles found.</p>";
+
+                return;
+            }
+
+
+            list.innerHTML =
+                cycles.map(cycle => `
+
+                    <div class="cycle-card">
+
+                        <h3>
+                            ${cycle.cycleName}
+                        </h3>
+
+                        <p>
+                            <strong>ID:</strong>
+                            ${cycle.id}
+                        </p>
+
+                        <p>
+                            <strong>Start Date:</strong>
+                            ${cycle.startDate}
+                        </p>
+
+                        <p>
+                            <strong>End Date:</strong>
+                            ${cycle.endDate}
+                        </p>
+
+                        <p>
+                            <strong>Status:</strong>
+
+                            <span class="status">
+                                ${cycle.status}
+                            </span>
+
+                        </p>
+
+                        ${
+                            cycle.status === "OPEN"
+                            ? `
+                                <button
+                                    class="finalize"
+                                    onclick="finalizeCycle(${cycle.id})">
+
+                                    Finalize
+
+                                </button>
+                            `
+                            : ""
+                        }
+
+                        ${
+                            cycle.status === "FINALIZED"
+                            ? `
+                                <button
+                                    class="archive"
+                                    onclick="archiveCycle(${cycle.id})">
+
+                                    Archive
+
+                                </button>
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                `).join("");
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            list.innerHTML =
+                "<p>Failed to load billing cycles.</p>";
+        }
+
+    }
+
+
+    // =========================
+    // FINALIZE
+    // =========================
+
+    async function finalizeCycle(id) {
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/billing-cycles/${id}/finalize`,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Failed to finalize billing cycle"
+                );
+            }
+
+
+            alert(
+                "Billing cycle finalized successfully."
+            );
+
+            loadBillingCycles();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.message ||
+                "Failed to finalize billing cycle"
+            );
+        }
+
+    }
+
+
+    // =========================
+    // ARCHIVE
+    // =========================
+
+    async function archiveCycle(id) {
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/billing-cycles/${id}/archive`,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Failed to archive billing cycle"
+                );
+            }
+
+
+            alert(
+                "Billing cycle archived successfully."
+            );
+
+            loadBillingCycles();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.message ||
+                "Failed to archive billing cycle"
+            );
+        }
+
+    }
+
+</script>
+
+</body>
+
+</html>

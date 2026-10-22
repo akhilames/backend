@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts - Water Billing</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f7fa;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: #1a5276;
+            font-size: 28px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(41, 128, 185, 0.4);
+        }
+
+        .btn-back {
+            background: #7f8c8d;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #5d6d7e;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #2980b9;
+        }
+
+        .stat-box .num {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a5276;
+        }
+
+        .stat-box .label {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .alert-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #f39c12;
+            transition: all 0.2s;
+        }
+
+        .alert-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .alert-card.OVERUSE { border-left-color: #e67e22; }
+        .alert-card.LEAK    { border-left-color: #e74c3c; }
+        .alert-card.BILL    { border-left-color: #3498db; }
+        .alert-card.PAYMENT { border-left-color: #27ae60; }
+
+        .alert-card.read {
+            opacity: 0.6;
+            border-left-color: #bdc3c7;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .alert-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.HIGH   { background: #fadbd8; color: #922b21; }
+        .badge.MEDIUM { background: #fdebd0; color: #9c640c; }
+        .badge.LOW    { background: #d4efdf; color: #1e8449; }
+
+        .alert-message {
+            color: #5d6d7e;
+            font-size: 14px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .alert-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #95a5a6;
+            padding-top: 10px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .mark-btn {
+            background: #27ae60;
+            color: white;
+            padding: 5px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .mark-btn:hover {
+            background: #1e8449;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #95a5a6;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .empty-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🔔 Alerts</h1>
+        <div>
+            <button class="btn btn-primary" onclick="loadAlerts()">Refresh</button>
+            <button class="btn btn-back" onclick="window.location.href='/admin-dashboard.html'">Back</button>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-box">
+            <div class="num" id="totalAlerts">0</div>
+            <div class="label">Total Alerts</div>
+        </div>
+        <div class="stat-box" style="border-left-color: #e74c3c;">
+            <div class="num" id="unreadAlerts">0</div>
+            <div class="label">Unread</div>
+        </div>
+        <div class="stat-box" style="border-left-color: #27ae60;">
+            <div class="num" id="readAlerts">0</div>
+            <div class="label">Read</div>
+        </div>
+    </div>
+
+    <div id="alertList">
+        <div class="loading">Loading alerts...</div>
+    </div>
+
+</div>
+
+<script>
+
+    // =========================
+    // LOAD ALL ALERTS
+    // =========================
+    async function loadAlerts() {
+        const list = document.getElementById('alertList');
+        list.innerHTML = '<div class="loading">Loading alerts...</div>';
+
+        try {
+            const response = await fetch('/api/alerts');
+            const alerts = await response.json();
+
+            // Update stats
+            document.getElementById('totalAlerts').textContent = alerts.length;
+            document.getElementById('unreadAlerts').textContent =
+                alerts.filter(a => a.status === 'UNREAD').length;
+            document.getElementById('readAlerts').textContent =
+                alerts.filter(a => a.status === 'READ').length;
+
+            if (alerts.length === 0) {
+                list.innerHTML = `
+                    <div class="empty">
+                        <div class="empty-icon">✅</div>
+                        <h3>No Alerts</h3>
+                        <p>Everything is normal.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by createdAt (newest first)
+            alerts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            list.innerHTML = alerts.map(alert => `
+                <div class="alert-card ${alert.type} ${alert.status === 'READ' ? 'read' : ''}">
+                    <div class="alert-header">
+                        <div class="alert-title">
+                            ${getIcon(alert.type)} ${alert.title}
+                        </div>
+                        <span class="badge ${alert.severity}">${alert.severity}</span>
+                    </div>
+
+                    <div class="alert-message">${alert.message}</div>
+
+                    <div class="alert-meta">
+                        <span>
+                            👤 ${alert.resident ? alert.resident.name : 'N/A'}
+                        </span>
+                        <span>
+                            ${formatDate(alert.createdAt)}
+                        </span>
+                    </div>
+
+                    ${alert.status === 'UNREAD' ? `
+                        <button class="mark-btn" onclick="markRead(${alert.id})">
+                            Mark as Read
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error(error);
+            list.innerHTML = '<div class="empty">Failed to load alerts.</div>';
+        }
+    }
+
+    // =========================
+    // MARK AS READ
+    // =========================
+    async function markRead(id) {
+        try {
+            await fetch(`/api/alerts/${id}/read`, { method: 'PUT' });
+            loadAlerts();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+    function getIcon(type) {
+        switch (type) {
+            case 'OVERUSE': return '⚠️';
+            case 'LEAK':    return '🚨';
+            case 'BILL':    return '💧';
+            case 'PAYMENT': return '💰';
+            default:        return '🔔';
+        }
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // =========================
+    // INIT
+    // =========================
+    loadAlerts();
+
+</script>
+
+</body>
+
+</html>

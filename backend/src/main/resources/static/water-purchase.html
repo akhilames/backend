@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Water Purchase</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f6f8;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            margin-top: 25px;
+            border-radius: 10px;
+            max-width: 650px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .back {
+            background: #6b7280;
+            margin-left: 8px;
+        }
+
+        .back:hover {
+            background: #4b5563;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .purchase {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<h1>Water Purchase</h1>
+
+<div class="form-box">
+
+    <h2>Add Water Purchase</h2>
+
+    <form id="purchaseForm">
+
+        <label for="billingCycleId">
+            Billing Cycle
+        </label>
+
+        <select id="billingCycleId" required>
+            <option value="">Loading billing cycles...</option>
+        </select>
+
+
+        <label for="source">
+            Water Source
+        </label>
+
+        <input
+                type="text"
+                id="source"
+                placeholder="Example: Tanker Supply"
+                required
+        >
+
+
+        <label for="purchasedVolume">
+            Purchased Volume
+        </label>
+
+        <input
+                type="number"
+                id="purchasedVolume"
+                placeholder="Example: 1000"
+                min="0.01"
+                step="0.01"
+                required
+        >
+
+
+        <label for="unitCost">
+            Unit Cost
+        </label>
+
+        <input
+                type="number"
+                id="unitCost"
+                placeholder="Example: 2.5"
+                min="0"
+                step="0.01"
+                required
+        >
+
+
+        <label for="purchaseDate">
+            Purchase Date
+        </label>
+
+        <input
+                type="date"
+                id="purchaseDate"
+                required
+        >
+
+
+        <button type="submit">
+            Add Water Purchase
+        </button>
+
+        <button
+                type="button"
+                class="back"
+                onclick="window.location.href='/admin-dashboard.html'">
+
+            Back to Dashboard
+
+        </button>
+
+    </form>
+
+    <div id="message"></div>
+
+</div>
+
+
+<div class="form-box">
+
+    <h2>Water Purchase Records</h2>
+
+    <button onclick="loadPurchases()">
+        View Purchases
+    </button>
+
+    <div id="purchaseList"></div>
+
+</div>
+
+
+<script>
+
+    // =========================
+    // LOAD OPEN BILLING CYCLES
+    // =========================
+
+    async function loadBillingCycles() {
+
+        const select =
+            document.getElementById("billingCycleId");
+
+        try {
+
+            const response =
+                await fetch("/api/billing-cycles");
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load billing cycles"
+                );
+            }
+
+            const cycles =
+                await response.json();
+
+            const openCycles =
+                cycles.filter(
+                    cycle => cycle.status === "OPEN"
+                );
+
+            select.innerHTML =
+                '<option value="">Select Billing Cycle</option>';
+
+
+            if (openCycles.length === 0) {
+
+                select.innerHTML =
+                    '<option value="">No OPEN billing cycle available</option>';
+
+                return;
+            }
+
+
+            openCycles.forEach(cycle => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value =
+                    cycle.id;
+
+                option.textContent =
+                    `${cycle.cycleName} (${cycle.startDate} to ${cycle.endDate})`;
+
+                select.appendChild(option);
+
+            });
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            select.innerHTML =
+                '<option value="">Failed to load billing cycles</option>';
+        }
+
+    }
+
+
+    // =========================
+    // ADD WATER PURCHASE
+    // =========================
+
+    document.getElementById("purchaseForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const message =
+                document.getElementById("message");
+
+
+            const billingCycleId =
+                document.getElementById("billingCycleId").value;
+
+            const source =
+                document.getElementById("source")
+                    .value.trim();
+
+            const purchasedVolume =
+                document.getElementById("purchasedVolume")
+                    .value;
+
+            const unitCost =
+                document.getElementById("unitCost")
+                    .value;
+
+            const purchaseDate =
+                document.getElementById("purchaseDate")
+                    .value;
+
+
+            if (!billingCycleId) {
+
+                message.className = "error";
+
+                message.textContent =
+                    "Please select an OPEN billing cycle.";
+
+                return;
+            }
+
+
+            message.className = "";
+
+            message.textContent =
+                "Saving water purchase...";
+
+
+            try {
+
+                const response =
+                    await fetch("/api/water-purchases", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            billingCycleId:
+                                billingCycleId,
+
+                            source:
+                                source,
+
+                            purchasedVolume:
+                                purchasedVolume,
+
+                            unitCost:
+                                unitCost,
+
+                            purchaseDate:
+                                purchaseDate
+
+                        })
+
+                    });
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to create water purchase"
+                    );
+                }
+
+
+                message.className = "success";
+
+                message.textContent =
+                    "Water purchase added successfully.";
+
+
+                document.getElementById("purchaseForm")
+                    .reset();
+
+
+                loadBillingCycles();
+
+                loadPurchases();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.className = "error";
+
+                message.textContent =
+                    error.message ||
+                    "Failed to add water purchase";
+            }
+
+        });
+
+
+    // =========================
+    // LOAD PURCHASES
+    // =========================
+
+    async function loadPurchases() {
+
+        const list =
+            document.getElementById("purchaseList");
+
+
+        list.innerHTML =
+            "<p>Loading purchases...</p>";
+
+
+        try {
+
+            const response =
+                await fetch("/api/water-purchases");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load purchases"
+                );
+            }
+
+
+            const purchases =
+                await response.json();
+
+
+            if (purchases.length === 0) {
+
+                list.innerHTML =
+                    "<p>No water purchases found.</p>";
+
+                return;
+            }
+
+
+            list.innerHTML =
+                purchases.map(purchase => `
+
+                    <div class="purchase">
+
+                        <h3>
+                            ${purchase.source}
+                        </h3>
+
+                        <p>
+                            <strong>ID:</strong>
+                            ${purchase.id}
+                        </p>
+
+                        <p>
+                            <strong>Billing Cycle:</strong>
+                            ${
+                                purchase.billingCycle
+                                    ? purchase.billingCycle.cycleName
+                                    : "Not assigned"
+                            }
+                        </p>
+
+                        <p>
+                            <strong>Purchased Volume:</strong>
+                            ${purchase.purchasedVolume}
+                        </p>
+
+                        <p>
+                            <strong>Unit Cost:</strong>
+                            ₹${purchase.unitCost}
+                        </p>
+
+                        <p>
+                            <strong>Total Cost:</strong>
+                            ₹${purchase.totalCost}
+                        </p>
+
+                        <p>
+                            <strong>Purchase Date:</strong>
+                            ${purchase.purchaseDate}
+                        </p>
+
+                    </div>
+
+                `).join("");
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            list.innerHTML =
+                "<p>Failed to load water purchases.</p>";
+        }
+
+    }
+
+
+    // =========================
+    // INITIAL LOAD
+    // =========================
+
+    loadBillingCycles();
+
+    loadPurchases();
+
+</script>
+
+</body>
+
+</html>

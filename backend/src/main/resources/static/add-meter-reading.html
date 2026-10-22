@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Meter Reading</title>
+</head>
+
+<body>
+
+<h1>Add Meter Reading</h1>
+
+<form id="meterReadingForm">
+
+    <label>Property ID:</label><br>
+    <input type="number" id="propertyId" required><br><br>
+
+    <label>Previous Reading:</label><br>
+    <input type="number" step="0.01" id="previousReading" required><br><br>
+
+    <label>Current Reading:</label><br>
+    <input type="number" step="0.01" id="currentReading" required><br><br>
+
+    <label>Reading Date:</label><br>
+    <input type="date" id="readingDate" required><br><br>
+
+    <button type="submit">Add Meter Reading</button>
+
+</form>
+
+<p id="message"></p>
+
+<script>
+
+    document.getElementById("meterReadingForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const request = {
+
+                propertyId:
+                    document.getElementById("propertyId").value,
+
+                previousReading:
+                    document.getElementById("previousReading").value,
+
+                currentReading:
+                    document.getElementById("currentReading").value,
+
+                readingDate:
+                    document.getElementById("readingDate").value
+            };
+
+            const message =
+                document.getElementById("message");
+
+            try {
+
+                const response = await fetch(
+                    "/api/meter-readings",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify(request)
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+
+                    message.textContent =
+                        "Meter reading added successfully!";
+
+                    document.getElementById("meterReadingForm").reset();
+
+                } else {
+
+                    message.textContent =
+                        data.message ||
+                        "Failed to add meter reading";
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "Server connection failed";
+            }
+
+        });
+
+</script>
+
+</body>
+</html>

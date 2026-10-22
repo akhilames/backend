@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f6f8;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .dashboard-buttons {
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .content {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .logout {
+            background: #dc2626;
+        }
+
+        .logout:hover {
+            background: #b91c1c;
+        }
+
+        .btn-pdf {
+            background: #27ae60;
+        }
+
+        .btn-pdf:hover {
+            background: #1e8449;
+        }
+
+        .btn-alerts {
+            background: #f39c12;
+        }
+
+        .btn-alerts:hover {
+            background: #d68910;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Resident Dashboard</h1>
+
+<p id="welcome"></p>
+
+<hr>
+
+<h2>Dashboard</h2>
+
+<div class="dashboard-buttons">
+
+    <button onclick="showSection('properties')">
+        Properties
+    </button>
+
+    <button onclick="showSection('meterReadings')">
+        Meter Readings
+    </button>
+
+    <button onclick="showSection('bills')">
+        Bills
+    </button>
+
+    <button onclick="showSection('payments')">
+        Payments
+    </button>
+
+    <!-- NEW: Alerts Button -->
+    <button class="btn-alerts" onclick="window.location.href='/alerts.html'">
+        🔔 Alerts
+    </button>
+
+    <button class="logout" onclick="logout()">
+        Logout
+    </button>
+
+</div>
+
+<hr>
+
+<div id="content" class="content">
+    <h2>Welcome</h2>
+    <p>Select an option above.</p>
+</div>
+
+<script>
+    // =========================
+    // USER CHECK
+    // =========================
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+        window.location.href = "/login.html";
+    } else {
+        document.getElementById("welcome").textContent = "Welcome, " + user.name;
+    }
+
+    // =========================
+    // SHOW SECTION
+    // =========================
+    function showSection(section) {
+        const content = document.getElementById("content");
+
+        if (section === "properties") {
+            content.innerHTML = `
+                <h2>Properties</h2>
+                <button onclick="loadProperties()">View Properties</button>
+                <div id="propertyList"><p>Click View Properties to load data.</p></div>
+            `;
+        }
+
+        if (section === "meterReadings") {
+            content.innerHTML = `
+                <h2>Meter Readings</h2>
+                <button onclick="loadMeterReadings()">View Meter Readings</button>
+                <div id="meterReadingList"><p>Click View Meter Readings to load data.</p></div>
+            `;
+        }
+
+        if (section === "bills") {
+            content.innerHTML = `
+                <h2>Bills</h2>
+                <button onclick="loadBills()">View Bills</button>
+                <div id="billList"><p>Click View Bills to load data.</p></div>
+            `;
+        }
+
+        if (section === "payments") {
+            content.innerHTML = `
+                <h2>Payments</h2>
+                <button onclick="loadPayments()">View Payments</button>
+                <div id="paymentList"><p>Click View Payments to load data.</p></div>
+            `;
+        }
+    }
+
+    // =========================
+    // LOAD RESIDENT PROPERTIES
+    // =========================
+    async function loadProperties() {
+        const propertyList = document.getElementById("propertyList");
+        propertyList.innerHTML = "<p>Loading properties...</p>";
+
+        try {
+            const response = await fetch("/api/properties/resident/" + user.residentId);
+            if (!response.ok) throw new Error("Failed to load resident properties");
+
+            const properties = await response.json();
+
+            if (properties.length === 0) {
+                propertyList.innerHTML = "<p>No properties found.</p>";
+                return;
+            }
+
+            propertyList.innerHTML = properties.map(property => `
+                <div class="card">
+                    <h3>${property.propertyNo}</h3>
+                    <p><strong>Property ID:</strong> ${property.id}</p>
+                    <p><strong>Meter Number:</strong> ${property.meterNumber}</p>
+                    <p><strong>Address:</strong> ${property.address}</p>
+                    <p><strong>Flat Size:</strong> ${property.flatSize ?? "N/A"}</p>
+                    <p><strong>Occupancy:</strong> ${property.occupancy ?? "N/A"}</p>
+                </div>
+            `).join("");
+
+        } catch (error) {
+            console.error(error);
+            propertyList.innerHTML = "<p>Failed to load properties.</p>";
+        }
+    }
+
+    // =========================
+    // LOAD RESIDENT METER READINGS
+    // =========================
+    async function loadMeterReadings() {
+        const list = document.getElementById("meterReadingList");
+        list.innerHTML = "<p>Loading meter readings...</p>";
+
+        try {
+            const propertyResponse = await fetch("/api/properties/resident/" + user.residentId);
+            if (!propertyResponse.ok) throw new Error("Failed to load resident properties");
+
+            const properties = await propertyResponse.json();
+
+            if (properties.length === 0) {
+                list.innerHTML = "<p>No properties found.</p>";
+                return;
+            }
+
+            const readingResponses = await Promise.all(
+                properties.map(property => fetch("/api/meter-readings/property/" + property.id))
+            );
+
+            for (const response of readingResponses) {
+                if (!response.ok) throw new Error("Failed to load meter readings");
+            }
+
+            const readingData = await Promise.all(readingResponses.map(response => response.json()));
+            const readings = readingData.flat();
+
+            if (readings.length === 0) {
+                list.innerHTML = "<p>No meter readings found.</p>";
+                return;
+            }
+
+            list.innerHTML = readings.map(reading => `
+                <div class="card">
+                    <h3>Meter Reading ${reading.id}</h3>
+                    <p><strong>Property ID:</strong> ${reading.property?.id ?? "N/A"}</p>
+                    <p><strong>Property No:</strong> ${reading.property?.propertyNo ?? "N/A"}</p>
+                    <p><strong>Previous Reading:</strong> ${reading.previousReading}</p>
+                    <p><strong>Current Reading:</strong> ${reading.currentReading}</p>
+                    <p><strong>Units Consumed:</strong> ${reading.unitsConsumed}</p>
+                    <p><strong>Reading Date:</strong> ${reading.readingDate}</p>
+                </div>
+            `).join("");
+
+        } catch (error) {
+            console.error(error);
+            list.innerHTML = "<p>Failed to load meter readings.</p>";
+        }
+    }
+
+    // =========================
+    // LOAD RESIDENT BILLS
+    // =========================
+    async function loadBills() {
+        const list = document.getElementById("billList");
+        list.innerHTML = "<p>Loading bills...</p>";
+
+        try {
+            const response = await fetch("/api/bills/resident/" + user.residentId);
+            if (!response.ok) throw new Error("Failed to load resident bills");
+
+            const bills = await response.json();
+
+            if (bills.length === 0) {
+                list.innerHTML = "<p>No bills found.</p>";
+                return;
+            }
+
+            list.innerHTML = bills.map(bill => `
+                <div class="card">
+                    <h3>${bill.billNumber}</h3>
+                    <p><strong>Billing Month:</strong> ${bill.billingMonth}</p>
+                    <p><strong>Water Charges:</strong> ₹${bill.waterCharges}</p>
+                    <p><strong>Fixed Charges:</strong> ₹${bill.fixedCharges}</p>
+                    <p><strong>Shared Cost:</strong> ₹${bill.sharedCost || 0}</p>
+                    <p><strong>Total Amount:</strong> ₹${bill.totalAmount}</p>
+                    <p><strong>Status:</strong> ${bill.status}</p>
+                    <p><strong>Due Date:</strong> ${bill.dueDate}</p>
+
+                    <!-- NEW: Download PDF Button -->
+                    <button class="btn-pdf" onclick="window.open('/api/invoices/${bill.id}/pdf', '_blank')">
+                        📄 Download PDF
+                    </button>
+                </div>
+            `).join("");
+
+        } catch (error) {
+            console.error(error);
+            list.innerHTML = "<p>Failed to load bills.</p>";
+        }
+    }
+
+    // =========================
+    // LOAD RESIDENT PAYMENTS
+    // =========================
+    async function loadPayments() {
+        const list = document.getElementById("paymentList");
+        list.innerHTML = "<p>Loading payments...</p>";
+
+        try {
+            const response = await fetch("/api/payments/resident/" + user.residentId);
+            if (!response.ok) throw new Error("Failed to load resident payments");
+
+            const payments = await response.json();
+
+            if (payments.length === 0) {
+                list.innerHTML = "<p>No payments found.</p>";
+                return;
+            }
+
+            list.innerHTML = payments.map(payment => `
+                <div class="card">
+                    <h3>${payment.transactionId}</h3>
+                    <p><strong>Payment ID:</strong> ${payment.id}</p>
+                    <p><strong>Amount:</strong> ₹${payment.amount}</p>
+                    <p><strong>Payment Method:</strong> ${payment.paymentMethod}</p>
+                    <p><strong>Status:</strong> ${payment.status}</p>
+                    <p><strong>Payment Date:</strong> ${payment.paymentDate}</p>
+                </div>
+            `).join("");
+
+        } catch (error) {
+            console.error(error);
+            list.innerHTML = "<p>Failed to load payments.</p>";
+        }
+    }
+
+    // =========================
+    // LOGOUT
+    // =========================
+    function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "/login.html";
+    }
+</script>
+
+</body>
+</html>

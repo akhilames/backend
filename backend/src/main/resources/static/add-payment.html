@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Make Payment</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f6f8;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .form-box,
+        .payment-box {
+            background: white;
+            padding: 25px;
+            margin-top: 20px;
+            border-radius: 10px;
+            max-width: 650px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 20px;
+            margin-right: 8px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .back {
+            background: #6b7280;
+        }
+
+        .payment-box {
+            display: none;
+        }
+
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<h1>Make Payment</h1>
+
+<div class="form-box">
+
+    <form id="paymentForm">
+
+        <label for="billId">
+            Bill ID:
+        </label>
+
+        <input
+                type="number"
+                id="billId"
+                min="1"
+                required
+        >
+
+
+        <label for="amount">
+            Amount:
+        </label>
+
+        <input
+                type="number"
+                id="amount"
+                step="0.01"
+                min="0.01"
+                required
+        >
+
+
+        <label for="paymentMethod">
+            Payment Method:
+        </label>
+
+        <select id="paymentMethod" required>
+
+            <option value="">
+                Select Payment Method
+            </option>
+
+            <option value="UPI">
+                UPI
+            </option>
+
+            <option value="CARD">
+                CARD
+            </option>
+
+            <option value="CASH">
+                CASH
+            </option>
+
+            <option value="NET_BANKING">
+                NET BANKING
+            </option>
+
+        </select>
+
+
+        <button type="submit">
+            Make Payment
+        </button>
+
+        <button
+                type="button"
+                class="back"
+                onclick="window.location.href='/admin-dashboard.html'">
+
+            Back to Dashboard
+
+        </button>
+
+    </form>
+
+    <p id="message"></p>
+
+</div>
+
+
+<div class="payment-box" id="paymentBox">
+
+    <h2>Payment Successful</h2>
+
+    <div class="payment-row">
+        <strong>Payment ID</strong>
+        <span id="paymentId"></span>
+    </div>
+
+    <div class="payment-row">
+        <strong>Bill ID</strong>
+        <span id="paymentBillId"></span>
+    </div>
+
+    <div class="payment-row">
+        <strong>Amount</strong>
+        <span id="paymentAmount"></span>
+    </div>
+
+    <div class="payment-row">
+        <strong>Payment Method</strong>
+        <span id="paymentMethodResult"></span>
+    </div>
+
+    <div class="payment-row">
+        <strong>Transaction ID</strong>
+        <span id="transactionId"></span>
+    </div>
+
+    <div class="payment-row">
+        <strong>Status</strong>
+        <span id="paymentStatus"></span>
+    </div>
+
+    <div class="payment-row">
+        <strong>Payment Date</strong>
+        <span id="paymentDate"></span>
+    </div>
+
+</div>
+
+
+<script>
+
+    document.getElementById("paymentForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const message =
+                document.getElementById("message");
+
+            message.className = "";
+
+            message.textContent =
+                "Processing payment...";
+
+
+            const request = {
+
+                billId:
+                    document.getElementById("billId").value,
+
+                amount:
+                    document.getElementById("amount").value,
+
+                paymentMethod:
+                    document.getElementById("paymentMethod").value
+
+            };
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/payments",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+
+                            body: JSON.stringify(request)
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message ||
+                        "Payment failed"
+                    );
+                }
+
+
+                message.className =
+                    "success";
+
+                message.textContent =
+                    "Payment successful!";
+
+
+                document.getElementById("paymentId")
+                    .textContent =
+                    data.id;
+
+                document.getElementById("paymentBillId")
+                    .textContent =
+                    data.bill.id;
+
+                document.getElementById("paymentAmount")
+                    .textContent =
+                    "₹" + Number(data.amount)
+                        .toFixed(2);
+
+                document.getElementById("paymentMethodResult")
+                    .textContent =
+                    data.paymentMethod;
+
+                document.getElementById("transactionId")
+                    .textContent =
+                    data.transactionId;
+
+                document.getElementById("paymentStatus")
+                    .textContent =
+                    data.status;
+
+                document.getElementById("paymentDate")
+                    .textContent =
+                    data.paymentDate;
+
+
+                document.getElementById("paymentBox")
+                    .style.display = "block";
+
+
+                document.getElementById("paymentForm")
+                    .reset();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.className =
+                    "error";
+
+                message.textContent =
+                    error.message ||
+                    "Server connection failed";
+            }
+
+        });
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Shared Cost Distribution</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f6f8;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .box {
+            background: white;
+            padding: 25px;
+            margin-top: 20px;
+            border-radius: 10px;
+            max-width: 850px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            max-width: 650px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            margin-top: 20px;
+            margin-right: 8px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .back {
+            background: #6b7280;
+        }
+
+        .allocation {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Shared Cost Distribution</h1>
+
+<div class="box">
+
+    <h2>Select Billing Cycle</h2>
+
+    <label for="billingCycleId">
+        Billing Cycle
+    </label>
+
+    <select id="billingCycleId">
+        <option value="">Loading billing cycles...</option>
+    </select>
+
+    <br>
+
+    <button onclick="generateAllocation()">
+        Generate Allocation
+    </button>
+
+    <button onclick="viewAllocation()">
+        View Allocation
+    </button>
+
+    <button
+            class="back"
+            onclick="window.location.href='/admin-dashboard.html'">
+        Back to Dashboard
+    </button>
+
+    <div id="message"></div>
+
+</div>
+
+
+<div class="box">
+
+    <h2>Allocation Results</h2>
+
+    <div id="allocationList">
+        <p>Select a billing cycle and click View Allocation.</p>
+    </div>
+
+</div>
+
+
+<script>
+
+    // =========================
+    // LOAD BILLING CYCLES
+    // =========================
+
+    async function loadBillingCycles() {
+
+        const select =
+            document.getElementById("billingCycleId");
+
+        try {
+
+            const response =
+                await fetch("/api/billing-cycles");
+
+            if (!response.ok) {
+                throw new Error(
+                    "Failed to load billing cycles"
+                );
+            }
+
+            const cycles =
+                await response.json();
+
+            select.innerHTML =
+                '<option value="">Select Billing Cycle</option>';
+
+            cycles.forEach(cycle => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = cycle.id;
+
+                option.textContent =
+                    `${cycle.cycleName} - ${cycle.status}`;
+
+                select.appendChild(option);
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            select.innerHTML =
+                '<option value="">Failed to load cycles</option>';
+        }
+    }
+
+
+    // =========================
+    // GENERATE ALLOCATION
+    // =========================
+
+    async function generateAllocation() {
+
+        const billingCycleId =
+            document.getElementById("billingCycleId").value;
+
+        const message =
+            document.getElementById("message");
+
+        if (!billingCycleId) {
+
+            message.className = "error";
+
+            message.textContent =
+                "Please select a billing cycle.";
+
+            return;
+        }
+
+        message.className = "";
+
+        message.textContent =
+            "Generating shared cost allocation...";
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/shared-cost-allocations/generate/${billingCycleId}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Failed to generate allocation"
+                );
+            }
+
+            message.className = "success";
+
+            message.textContent =
+                "Shared cost allocation generated successfully.";
+
+            displayAllocations(data);
+
+        } catch (error) {
+
+            console.error(error);
+
+            message.className = "error";
+
+            message.textContent =
+                error.message ||
+                "Failed to generate allocation";
+        }
+    }
+
+
+    // =========================
+    // VIEW ALLOCATION
+    // =========================
+
+    async function viewAllocation() {
+
+        const billingCycleId =
+            document.getElementById("billingCycleId").value;
+
+        const message =
+            document.getElementById("message");
+
+        if (!billingCycleId) {
+
+            message.className = "error";
+
+            message.textContent =
+                "Please select a billing cycle.";
+
+            return;
+        }
+
+        message.className = "";
+
+        message.textContent =
+            "Loading allocation...";
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/shared-cost-allocations/billing-cycle/${billingCycleId}`
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Failed to load allocation"
+                );
+            }
+
+            displayAllocations(data);
+
+            message.textContent = "";
+
+        } catch (error) {
+
+            console.error(error);
+
+            message.className = "error";
+
+            message.textContent =
+                error.message ||
+                "Failed to load allocation";
+        }
+    }
+
+
+    // =========================
+    // DISPLAY ALLOCATIONS
+    // =========================
+
+    function displayAllocations(allocations) {
+
+        const list =
+            document.getElementById("allocationList");
+
+        if (!allocations || allocations.length === 0) {
+
+            list.innerHTML =
+                "<p>No allocations found for this billing cycle.</p>";
+
+            return;
+        }
+
+        list.innerHTML =
+            allocations.map(allocation => {
+
+                const property =
+                    allocation.property;
+
+                const billingCycle =
+                    allocation.billingCycle;
+
+                return `
+
+                    <div class="allocation">
+
+                        <h3>
+                            Property:
+                            ${property.propertyNo}
+                        </h3>
+
+                        <p>
+                            <strong>Allocation ID:</strong>
+                            ${allocation.id}
+                        </p>
+
+                        <p>
+                            <strong>Resident Property:</strong>
+                            ${property.address}
+                        </p>
+
+                        <p>
+                            <strong>Billing Cycle:</strong>
+                            ${billingCycle.cycleName}
+                        </p>
+
+                        <p>
+                            <strong>Allocation Method:</strong>
+                            ${allocation.allocationMethod}
+                        </p>
+
+                        <p>
+                            <strong>Allocation Amount:</strong>
+                            ₹${Number(
+                                allocation.allocationAmount
+                            ).toFixed(2)}
+                        </p>
+
+                    </div>
+
+                `;
+
+            }).join("");
+    }
+
+
+    // =========================
+    // INITIAL LOAD
+    // =========================
+
+    window.addEventListener(
+        "DOMContentLoaded",
+        loadBillingCycles
+    );
+
+</script>
+
+</body>
+
+</html>

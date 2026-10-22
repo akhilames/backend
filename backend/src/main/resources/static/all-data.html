@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All System Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f7fa; }
+        h1 { color: #2980b9; }
+        h2 { color: #2c3e50; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background: #2980b9; color: white; }
+        tr:hover { background: #f1f1f1; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px;}
+        .btn { padding: 10px 15px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; text-decoration: none;}
+    </style>
+</head>
+<body>
+
+<h1>Water Billing - All Data Overview</h1>
+<a href="/admin-dashboard.html" class="btn">← Back to Dashboard</a>
+
+<!-- PROPERTIES -->
+<h2>🏢 Properties</h2>
+<div class="card">
+    <table id="propertiesTable">
+        <thead><tr><th>ID</th><th>Property No</th><th>Address</th><th>Meter No</th><th>Flat Size</th></tr></thead>
+        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+    </table>
+</div>
+
+<!-- METER READINGS -->
+<h2>📊 Meter Readings</h2>
+<div class="card">
+    <table id="readingsTable">
+        <thead><tr><th>ID</th><th>Property ID</th><th>Prev</th><th>Current</th><th>Units</th><th>Date</th></tr></thead>
+        <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
+    </table>
+</div>
+
+<!-- BILLS -->
+<h2>💰 Bills</h2>
+<div class="card">
+    <table id="billsTable">
+        <thead><tr><th>ID</th><th>Bill No</th><th>Month</th><th>Total Amt</th><th>Status</th><th>Download</th></tr></thead>
+        <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
+    </table>
+</div>
+
+<!-- PAYMENTS -->
+<h2>💳 Payments</h2>
+<div class="card">
+    <table id="paymentsTable">
+        <thead><tr><th>ID</th><th>Transaction</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+    </table>
+</div>
+
+<script>
+    // Load Properties
+    fetch('/api/properties').then(r => r.json()).then(data => {
+        document.querySelector('#propertiesTable tbody').innerHTML = data.map(p => `
+            <tr><td>${p.id}</td><td>${p.propertyNo}</td><td>${p.address}</td><td>${p.meterNumber}</td><td>${p.flatSize}</td></tr>
+        `).join('');
+    }).catch(e => document.querySelector('#propertiesTable tbody').innerHTML = '<tr><td colspan="5">Error loading</td></tr>');
+
+    // Load Meter Readings
+    fetch('/api/meter-readings').then(r => r.json()).then(data => {
+        document.querySelector('#readingsTable tbody').innerHTML = data.map(r => `
+            <tr><td>${r.id}</td><td>${r.property?.id || 'N/A'}</td><td>${r.previousReading}</td><td>${r.currentReading}</td><td>${r.unitsConsumed}</td><td>${r.readingDate}</td></tr>
+        `).join('');
+    }).catch(e => document.querySelector('#readingsTable tbody').innerHTML = '<tr><td colspan="6">Error loading</td></tr>');
+
+    // Load Bills
+    fetch('/api/bills').then(r => r.json()).then(data => {
+        document.querySelector('#billsTable tbody').innerHTML = data.map(b => `
+            <tr>
+                <td>${b.id}</td><td>${b.billNumber}</td><td>${b.billingMonth}</td>
+                <td>₹${b.totalAmount}</td><td>${b.status}</td>
+                <td><a href="/api/invoices/${b.id}/pdf" target="_blank" style="color:blue;">PDF</a></td>
+            </tr>
+        `).join('');
+    }).catch(e => document.querySelector('#billsTable tbody').innerHTML = '<tr><td colspan="6">Error loading</td></tr>');
+
+    // Load Payments
+    fetch('/api/payments').then(r => r.json()).then(data => {
+        document.querySelector('#paymentsTable tbody').innerHTML = data.map(p => `
+            <tr><td>${p.id}</td><td>${p.transactionId}</td><td>₹${p.amount}</td><td>${p.paymentMethod}</td><td>${p.status}</td></tr>
+        `).join('');
+    }).catch(e => document.querySelector('#paymentsTable tbody').innerHTML = '<tr><td colspan="5">Error loading</td></tr>');
+</script>
+
+</body>
+</html>

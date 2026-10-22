@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Resident</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6f8;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            width: 400px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Add Resident</h1>
+
+    <form id="residentForm">
+
+        <input
+                type="text"
+                id="username"
+                placeholder="Username"
+                required
+        >
+
+        <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+        >
+
+        <input
+                type="text"
+                id="name"
+                placeholder="Name"
+                required
+        >
+
+        <input
+                type="email"
+                id="email"
+                placeholder="Email"
+                required
+        >
+
+        <input
+                type="text"
+                id="phone"
+                placeholder="Phone"
+                required
+        >
+
+        <input
+                type="text"
+                id="address"
+                placeholder="Address"
+                required
+        >
+
+        <input
+                type="number"
+                id="commercialAdminId"
+                placeholder="Commercial Admin ID"
+                value="1"
+                required
+        >
+
+        <button type="submit">
+            Create Resident
+        </button>
+
+    </form>
+
+    <p id="message"></p>
+
+</div>
+
+<script>
+
+    document.getElementById("residentForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const message =
+                document.getElementById("message");
+
+            const request = {
+                username:
+                    document.getElementById("username").value,
+
+                password:
+                    document.getElementById("password").value,
+
+                name:
+                    document.getElementById("name").value,
+
+                email:
+                    document.getElementById("email").value,
+
+                phone:
+                    document.getElementById("phone").value,
+
+                address:
+                    document.getElementById("address").value,
+
+                commercialAdminId:
+                    document.getElementById("commercialAdminId").value
+            };
+
+            try {
+
+                const response = await fetch(
+                    "/api/residents",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(request)
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+
+                    message.textContent =
+                        "Resident created successfully!";
+
+                    document.getElementById("residentForm").reset();
+
+                    document.getElementById("commercialAdminId").value = "1";
+
+                } else {
+
+                    message.textContent =
+                        data.message || "Failed to create resident";
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "Server connection failed";
+            }
+
+        });
+
+</script>
+
+</body>
+</html>

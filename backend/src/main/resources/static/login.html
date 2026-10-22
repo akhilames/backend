@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Billing - Login</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f4f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            width: 360px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <h1>Water Billing</h1>
+
+    <p class="subtitle">Login to your account</p>
+
+    <form id="loginForm">
+
+        <label for="username">Username</label>
+
+        <input
+                type="text"
+                id="username"
+                placeholder="Enter username"
+                required
+        >
+
+        <label for="password">Password</label>
+
+        <input
+                type="password"
+                id="password"
+                placeholder="Enter password"
+                required
+        >
+
+        <button type="submit" id="loginButton">
+            Login
+        </button>
+
+    </form>
+
+    <div id="message"></div>
+
+</div>
+
+
+<script>
+
+    document.getElementById("loginForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const username =
+                document.getElementById("username").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+            const message =
+                document.getElementById("message");
+
+            const loginButton =
+                document.getElementById("loginButton");
+
+            message.textContent = "";
+
+            loginButton.disabled = true;
+            loginButton.textContent = "Logging in...";
+
+            try {
+
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+
+                    localStorage.setItem(
+                        "user",
+                        JSON.stringify(data)
+                    );
+
+                    message.textContent = "Login successful";
+
+                    setTimeout(function() {
+
+                        if (data.role === "COMMERCIAL_ADMIN") {
+
+                            window.location.href =
+                                "/admin-dashboard.html";
+
+                        } else if (data.role === "RESIDENT") {
+
+                            window.location.href =
+                                "/resident-dashboard.html";
+
+                        } else if (data.role === "SUPER_ADMIN") {
+
+                            window.location.href =
+                                "/super-admin-dashboard.html";
+
+                        } else {
+
+                            message.textContent =
+                                "Login successful, but role not recognized.";
+                        }
+
+                    }, 500);
+
+                } else {
+
+                    message.textContent =
+                        data.message || "Invalid username or password";
+
+                }
+
+            } catch (error) {
+
+                console.error("Login error:", error);
+
+                message.textContent =
+                    "Server connection failed";
+
+            } finally {
+
+                loginButton.disabled = false;
+                loginButton.textContent = "Login";
+            }
+
+        });
+
+</script>
+
+</body>
+</html>
