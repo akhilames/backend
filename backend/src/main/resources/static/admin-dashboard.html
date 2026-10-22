@@ -11,24 +11,33 @@
         body { display: flex; background: #f4f7fa; height: 100vh; overflow: hidden; color: #333; }
 
         /* Sidebar */
-        .sidebar { width: 250px; background: #1e293b; color: white; display: flex; flex-direction: column; }
+        .sidebar { width: 260px; background: #1e293b; color: white; display: flex; flex-direction: column; overflow-y: auto; }
         .logo { padding: 20px; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
         .logo span { color: #38bdf8; }
-        .nav-menu { padding: 20px 10px; display: flex; flex-direction: column; gap: 5px; }
-        .nav-item { padding: 12px 20px; border-radius: 8px; cursor: pointer; color: #cbd5e1; transition: 0.2s; font-size: 15px; display: flex; align-items: center; gap: 12px; }
-        .nav-item:hover, .nav-item.active { background: #334155; color: white; }
-        .nav-item.logout { margin-top: auto; color: #f87171; }
+        .nav-section { padding: 15px 10px; border-bottom: 1px solid #334155; }
+        .nav-title { font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: 600; margin-bottom: 10px; padding-left: 10px; letter-spacing: 1px; }
+        .nav-item { padding: 10px 15px; border-radius: 8px; cursor: pointer; color: #cbd5e1; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-item:hover { background: #334155; color: white; }
+        .nav-item.logout { color: #f87171; font-weight: 600; margin-top: 10px; }
         .nav-item.logout:hover { background: #7f1d1d; color: white; }
 
         /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .topbar { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .topbar { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
         .topbar h1 { font-size: 20px; font-weight: 600; color: #1e293b; }
         .user-info { display: flex; align-items: center; gap: 15px; font-weight: 500; }
-        .avatar { width: 40px; height: 40px; background: #38bdf8; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
         /* Dashboard Grid */
         .dashboard-container { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
+
+        /* Quick Actions */
+        .quick-actions { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+        .action-btn { padding: 12px 20px; border-radius: 8px; background: #2980b9; color: white; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .action-btn:hover { background: #1a5276; transform: translateY(-2px); }
+        .action-btn.bill { background: #27ae60; }
+        .action-btn.bill:hover { background: #1e8449; }
+        .action-btn.pay { background: #f39c12; }
+        .action-btn.pay:hover { background: #d68910; }
 
         /* Stat Cards */
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -39,39 +48,43 @@
         .stat-card.households { border-left-color: #10b981; }
         .stat-card.usage { border-left-color: #8b5cf6; }
 
-        /* Middle Row (Chart & Alerts) */
-        .middle-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .chart-box, .alerts-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .box-header { font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 20px; display: flex; justify-content: space-between;}
-
-        .alert-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; background: #f8fafc; margin-bottom: 10px; border-left: 3px solid #ef4444; }
-        .alert-item span { font-size: 13px; font-weight: 500; color: #333; }
-        .alert-badge { background: #fee2e2; color: #b91c1c; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-
-        /* Table */
-        .table-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); width: 100%; }
+        /* Tables & Charts */
+        .table-box, .chart-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); width: 100%; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; padding: 12px; font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
         td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-        tr:hover { background: #f8fafc; }
+
         .status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status.SUCCESS { background: #dcfce7; color: #166534; }
-        .status.UNREAD { background: #fee2e2; color: #991b1b; }
+        .status.PAID { background: #dcfce7; color: #166534; }
+        .status.UNPAID { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
 
-<!-- Sidebar -->
+<!-- Sidebar with Quick Navigation -->
 <div class="sidebar">
     <div class="logo">💧 <span>AquaTrack</span></div>
-    <div class="nav-menu">
-        <div class="nav-item active">Dashboard</div>
-        <div class="nav-item" onclick="window.location.href='/all-data.html'">Usage Logs</div>
-        <div class="nav-item" onclick="window.location.href='/all-data.html'">Households</div>
-        <div class="nav-item" onclick="window.location.href='/all-data.html'">Billing</div>
-        <div class="nav-item" onclick="window.location.href='/alerts.html'">Alerts</div>
-        <div class="nav-item" onclick="window.location.href='/all-data.html'">Reports</div>
-        <div class="nav-item logout" onclick="logout()">Logout</div>
+
+    <div class="nav-section">
+        <div class="nav-title">Main Menu</div>
+        <a href="/admin-dashboard.html" class="nav-item" style="background:#334155; color:white;">📊 Dashboard</a>
+        <a href="/all-data.html" class="nav-item">📄 All Data Overview</a>
+        <a href="/alerts.html" class="nav-item">🔔 Alerts</a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-title">Quick Add (Demo)</div>
+        <a href="/add-resident.html" class="nav-item">👤 Add Resident</a>
+        <a href="/add-property.html" class="nav-item">🏢 Add Property</a>
+        <a href="/add-meter-reading.html" class="nav-item">📝 Add Meter Reading</a>
+        <a href="/add-bill.html" class="nav-item">💰 Generate Bill</a>
+        <a href="/add-payment.html" class="nav-item">💳 Make Payment</a>
+        <a href="/water-purchase.html" class="nav-item">🚰 Water Purchase</a>
+        <a href="/shared-cost.html" class="nav-item">📊 Shared Cost</a>
+    </div>
+
+    <div class="nav-section">
+        <a class="nav-item logout" onclick="logout()">🚪 Logout</a>
     </div>
 </div>
 
@@ -80,12 +93,18 @@
     <div class="topbar">
         <h1>Dashboard Overview</h1>
         <div class="user-info">
-            <span id="welcomeName">Welcome, Admin</span>
-            <div class="avatar">A</div>
+            <span>Welcome, <strong id="welcomeName">Admin</strong></span>
         </div>
     </div>
 
     <div class="dashboard-container">
+        <!-- Quick Actions Row -->
+        <div class="quick-actions">
+            <a href="/add-bill.html" class="action-btn bill">💰 Generate New Bill</a>
+            <a href="/add-payment.html" class="action-btn pay">💳 Pay Bill</a>
+            <a href="/add-resident.html" class="action-btn">➕ Add New Resident</a>
+        </div>
+
         <!-- Stats -->
         <div class="stats-row">
             <div class="stat-card">
@@ -93,7 +112,7 @@
                 <div class="value" id="totalProperties">0</div>
             </div>
             <div class="stat-card households">
-                <h3>Households</h3>
+                <h3>Total Residents</h3>
                 <div class="value" id="totalResidents">0</div>
             </div>
             <div class="stat-card alerts">
@@ -106,30 +125,36 @@
             </div>
         </div>
 
-        <!-- Charts & Alerts -->
-        <div class="middle-row">
-            <div class="chart-box">
-                <div class="box-header">Monthly Consumption by Household (kL) - Top 6</div>
-                <canvas id="consumptionChart" height="100"></canvas>
-            </div>
-            <div class="alerts-box">
-                <div class="box-header">Active Alerts</div>
-                <div id="activeAlertsList">
-                    <p style="color:#64748b; font-size:14px;">Loading alerts...</p>
-                </div>
-            </div>
+        <!-- Recent Bills Table (To check payments) -->
+        <div class="table-box">
+            <h3 style="font-size:16px; font-weight:600; color:#1e293b;">Recent Bills & Payment Status</h3>
+            <table id="billsTable">
+                <thead>
+                <tr>
+                    <th>Bill ID</th>
+                    <th>Property</th>
+                    <th>Month</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td colspan="6">Loading bills...</td></tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- Recent Logs -->
+        <!-- Usage Logs Table -->
         <div class="table-box">
-            <div class="box-header">Recent Usage Logs</div>
-            <table id="recentLogsTable">
+            <h3 style="font-size:16px; font-weight:600; color:#1e293b;">Recent Usage Logs</h3>
+            <table id="logsTable">
                 <thead>
                 <tr>
                     <th>Log ID</th>
-                    <th>Property No</th>
+                    <th>Property</th>
                     <th>Date</th>
-                    <th>Previous Reading</th>
+                    <th>Prev Reading</th>
                     <th>Current Reading</th>
                     <th>Consumption (kL)</th>
                 </tr>
@@ -148,56 +173,62 @@
     if (!user) {
         window.location.href = "/login.html";
     } else {
-        document.getElementById("welcomeName").textContent = "Welcome, " + (user.username || "Admin");
-        document.querySelector(".avatar").textContent = (user.username || "A").charAt(0).toUpperCase();
+        document.getElementById("welcomeName").textContent = user.username || "Admin";
     }
 
-    // Fetch all data to populate dashboard
+    // Fetch all dashboard data
     async function loadDashboard() {
         try {
-            // 1. Fetch Properties
+            // 1. Properties Count
             const propRes = await fetch('/api/properties');
             const properties = await propRes.json();
             document.getElementById('totalProperties').textContent = properties.length;
 
-            // 2. Fetch Residents
+            // 2. Residents Count
             const resRes = await fetch('/api/residents');
             const residents = await resRes.json();
             document.getElementById('totalResidents').textContent = residents.length;
 
-            // 3. Fetch Alerts
+            // 3. Alerts Count
             const alertRes = await fetch('/api/alerts');
             const alerts = await alertRes.json();
             document.getElementById('totalAlerts').textContent = alerts.length;
 
-            // Render Top 3 Alerts
-            const alertBox = document.getElementById('activeAlertsList');
-            if(alerts.length > 0) {
-                alertBox.innerHTML = alerts.slice(0, 3).map(a => `
-                    <div class="alert-item">
-                        <span>${a.type}: ${a.message}</span>
-                        <span class="alert-badge">${a.status}</span>
-                    </div>
-                `).join('');
-            } else {
-                alertBox.innerHTML = '<p style="color:#64748b; font-size:14px;">No active alerts.</p>';
-            }
-
-            // 4. Fetch Bills for Revenue
+            // 4. Bills & Revenue
             const billRes = await fetch('/api/bills');
             const bills = await billRes.json();
             const revenue = bills.reduce((sum, b) => sum + b.totalAmount, 0);
             document.getElementById('totalRevenue').textContent = '₹' + revenue.toFixed(0);
 
-            // 5. Render Table (Meter Readings)
+            // Render Bills Table
+            const bTable = document.querySelector('#billsTable tbody');
+            if(bills.length > 0) {
+                // Show latest 5 bills
+                bTable.innerHTML = bills.slice(-5).reverse().map(b => `
+                    <tr>
+                        <td>#${b.id}</td>
+                        <td>${b.property ? b.property.propertyNo : 'N/A'}</td>
+                        <td>${b.billingMonth}</td>
+                        <td>₹${b.totalAmount}</td>
+                        <td><span class="status ${b.status}">${b.status}</span></td>
+                        <td>
+                            ${b.status === 'UNPAID' ? `<a href="/add-payment.html" style="color:#f39c12; font-weight:bold; text-decoration:none;">Pay Now</a>` : 'Paid'}
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                bTable.innerHTML = '<tr><td colspan="6">No bills generated yet.</td></tr>';
+            }
+
+            // 5. Recent Meter Readings
             const readRes = await fetch('/api/meter-readings');
             const readings = await readRes.json();
-            const tbody = document.querySelector('#recentLogsTable tbody');
+            const rTable = document.querySelector('#logsTable tbody');
 
             if(readings.length > 0) {
-                tbody.innerHTML = readings.slice(0, 5).map(r => `
+                rTable.innerHTML = readings.slice(-5).reverse().map(r => `
                     <tr>
-                        <td>LR-${r.id}</td>
+                        <td>#${r.id}</td>
                         <td>Property ${r.property ? r.property.propertyNo : 'N/A'}</td>
                         <td>${r.readingDate}</td>
                         <td>${r.previousReading}</td>
@@ -205,54 +236,24 @@
                         <td><strong>${r.unitsConsumed}</strong></td>
                     </tr>
                 `).join('');
-
-                // Render Chart
-                renderChart(readings);
             } else {
-                tbody.innerHTML = '<tr><td colspan="6">No logs found.</td></tr>';
+                rTable.innerHTML = '<tr><td colspan="6">No meter readings found.</td></tr>';
             }
 
         } catch (error) {
-            console.error("Error loading dashboard:", error);
+            console.error("Error loading dashboard data:", error);
+            document.querySelector('#billsTable tbody').innerHTML = '<tr><td colspan="6" style="color:red;">Failed to load data. Server might be waking up.</td></tr>';
+            document.querySelector('#logsTable tbody').innerHTML = '<tr><td colspan="6" style="color:red;">Failed to load data. Server might be waking up.</td></tr>';
         }
     }
 
-    // Chart.js setup
-    function renderChart(readings) {
-        const ctx = document.getElementById('consumptionChart').getContext('2d');
-        const labels = readings.slice(0, 6).map(r => 'Prop ' + (r.property ? r.property.propertyNo : r.id));
-        const data = readings.slice(0, 6).map(r => r.unitsConsumed);
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Consumption (kL)',
-                    data: data,
-                    backgroundColor: '#38bdf8',
-                    borderRadius: 6,
-                    barThickness: 40
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    }
-
-    // Logout function
+    // Logout
     function logout() {
         localStorage.removeItem("user");
         window.location.href = "/login.html";
     }
 
-    // Initialize
+    // Run
     loadDashboard();
 </script>
 </body>
