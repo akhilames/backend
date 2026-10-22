@@ -1,71 +1,42 @@
 package com.waterbilling.backend.controller;
 
 import com.waterbilling.backend.entity.MeterReading;
-import com.waterbilling.backend.service.MeterReadingService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.waterbilling.backend.repository.MeterReadingRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/meter-readings")
 public class MeterReadingController {
 
-    private final MeterReadingService meterReadingService;
-
-    public MeterReadingController(MeterReadingService meterReadingService) {
-        this.meterReadingService = meterReadingService;
-    }
-
-    @PostMapping
-    public ResponseEntity<MeterReading> addMeterReading(
-            @RequestBody Map<String, String> request) {
-
-        MeterReading reading = meterReadingService.addMeterReading(
-                Long.parseLong(request.get("propertyId")),
-                Double.parseDouble(request.get("previousReading")),
-                Double.parseDouble(request.get("currentReading")),
-                LocalDate.parse(request.get("readingDate"))
-        );
-
-        return ResponseEntity.ok(reading);
-    }
+    @Autowired
+    private MeterReadingRepository meterReadingRepository;
 
     @GetMapping
-    public ResponseEntity<List<MeterReading>> getAllMeterReadings() {
-        return ResponseEntity.ok(
-                meterReadingService.getAllMeterReadings()
-        );
-    }
+    public List<Map<String, Object>> getAllReadings() {
+        List<MeterReading> readings = meterReadingRepository.findAll();
 
-    @GetMapping("/{id}")
-    public ResponseEntity<MeterReading> getMeterReadingById(
-            @PathVariable Long id) {
+        return readings.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", r.getId());
+            map.put("readingDate", r.getReadingDate());
+            map.put("previousReading", r.getPreviousReading());
+            map.put("currentReading", r.getCurrentReading());
+            map.put("unitsConsumed", r.getUnitsConsumed());
 
-        return ResponseEntity.ok(
-                meterReadingService.getMeterReadingById(id)
-        );
-    }
-
-    @GetMapping("/property/{propertyId}")
-    public ResponseEntity<List<MeterReading>> getByProperty(
-            @PathVariable Long propertyId) {
-
-        return ResponseEntity.ok(
-                meterReadingService.getMeterReadingsByProperty(propertyId)
-        );
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteMeterReading(
-            @PathVariable Long id) {
-
-        meterReadingService.deleteMeterReading(id);
-
-        return ResponseEntity.ok(
-                Map.of("message", "Meter reading deleted successfully")
-        );
+            if (r.getProperty() != null) {
+                map.put("property", Map.of("propertyNo", r.getProperty().getPropertyNo()));
+            } else {
+                map.put("property", null);
+            }
+            return map;
+        }).collect(Collectors.toList());
     }
 }
