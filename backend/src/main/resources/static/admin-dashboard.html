@@ -3,392 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AquaTrack - Premium Water Dashboard</title>
+    <title>AquaTrack - Master Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg-dark: #07111e;
-            --bg-card: rgba(14, 30, 50, 0.6);
+            --bg-card: rgba(14, 30, 50, 0.7);
             --primary: #00d2ff;
             --secondary: #0077b6;
             --accent: #00ff87;
             --danger: #ff4757;
+            --warning: #f39c12;
             --text-main: #ffffff;
             --text-muted: #8b9eb7;
             --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; background-image: radial-gradient(circle at 50% 0%, rgba(0, 119, 182, 0.1) 0%, transparent 60%); }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-            background-image: radial-gradient(circle at 50% 50%, rgba(0, 119, 182, 0.15) 0%, transparent 60%);
-        }
+        /* Sidebar */
+        .sidebar { width: 260px; background: rgba(7, 17, 30, 0.95); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 10; }
+        .logo { padding: 25px; font-size: 22px; font-weight: 700; color: var(--primary); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px;}
+        .nav-menu { padding: 20px 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; overflow-y: auto;}
+        .nav-item { padding: 12px 20px; border-radius: 10px; color: var(--text-muted); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 14px;}
+        .nav-item:hover, .nav-item.active { background: rgba(0, 210, 255, 0.1); color: var(--primary); border-left: 3px solid var(--primary); }
+        .nav-item i { width: 20px; text-align: center; }
+        .logout-btn { margin-top: auto; color: var(--danger); }
 
-        /* --- Sidebar --- */
-        .sidebar {
-            width: 80px;
-            background: rgba(7, 17, 30, 0.8);
-            border-right: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            z-index: 10;
-        }
-        .logo-icon { color: var(--primary); font-size: 24px; margin-bottom: 40px; }
-        .nav-icons { display: flex; flex-direction: column; gap: 25px; }
-        .nav-icons i {
-            color: var(--text-muted);
-            font-size: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .nav-icons i:hover, .nav-icons i.active { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+        /* Main Content */
+        .main-content { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .top-header h1 { font-size: 24px; font-weight: 600; }
 
-        /* --- Main Content --- */
-        .main-content { flex: 1; display: flex; flex-direction: column; padding: 30px; position: relative; z-index: 5; }
+        /* Tabs Content Container */
+        .tab-content { display: none; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Top Nav */
-        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .nav-links { display: flex; gap: 25px; font-size: 14px; color: var(--text-muted); }
-        .nav-links span { cursor: pointer; transition: 0.3s; }
-        .nav-links span:hover, .nav-links span.active { color: white; font-weight: 500; }
-        .nav-links span.active::before { content: '•'; color: var(--accent); margin-right: 5px; }
+        /* Overview Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); }
+        .stat-card h4 { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+        .stat-card h2 { font-size: 28px; font-weight: 700; }
+        .stat-card.blue { border-bottom: 3px solid var(--primary); }
+        .stat-card.green { border-bottom: 3px solid var(--accent); }
+        .stat-card.orange { border-bottom: 3px solid var(--warning); }
+        .stat-card.red { border-bottom: 3px solid var(--danger); }
 
-        .user-controls { display: flex; align-items: center; gap: 20px; }
-        .chat-btn {
-            background: linear-gradient(90deg, #0077b6, #00d2ff);
-            border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
-        }
-        .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: url('https://i.pravatar.cc/100?img=5') center/cover; border: 2px solid var(--primary); }
+        /* Charts Section */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); }
+        .chart-card h3 { font-size: 16px; margin-bottom: 15px; color: var(--text-muted); }
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        .chart-container-small { position: relative; height: 250px; width: 100%; display: flex; justify-content: center; }
 
-        /* --- Dashboard Grid Layout --- */
-        .dashboard-body {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            grid-template-rows: 1fr auto;
-            gap: 20px;
-            position: relative;
-        }
+        /* Tables */
+        .table-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .table-header h3 { font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); }
+        td { padding: 12px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #d1d5db; }
+        tr:hover { background: rgba(255,255,255,0.02); }
 
-        /* Central Graphic & Floating Tags (Simulating the image) */
-        .bg-graphic {
-            position: absolute;
-            top: 50%; left: 40%;
-            transform: translate(-50%, -50%);
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(0, 210, 255, 0.1) 0%, transparent 60%);
-            border-radius: 50%;
-            z-index: -1;
-            pointer-events: none;
-        }
-        .floating-tag {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: flex; align-items: center; gap: 10px;
-            font-size: 12px;
-        }
-        .tag-avatar { width: 24px; height: 24px; border-radius: 50%; }
-        .tag-1 { top: 10%; left: 20%; }
-        .tag-2 { top: 30%; right: 10%; }
-        .tag-3 { top: 70%; left: 10%; }
+        /* Badges & Buttons */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge.PAID { background: rgba(0, 255, 135, 0.15); color: var(--accent); }
+        .badge.UNPAID { background: rgba(255, 71, 87, 0.15); color: var(--danger); }
 
-        /* Hero Numbers */
-        .hero-stats { grid-column: 1 / 2; display: flex; flex-direction: column; justify-content: center; }
-        .hero-stats h1 { font-size: 64px; font-weight: 300; margin-bottom: 10px; }
-        .hero-stats h1 span { font-size: 24px; color: var(--text-muted); }
-        .hero-stats .trend { color: var(--accent); font-size: 12px; background: rgba(0, 255, 135, 0.1); padding: 4px 10px; border-radius: 12px; display: inline-block; width: fit-content; margin-bottom: 20px;}
+        .btn { padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-primary { background: var(--primary); color: black; }
+        .btn-primary:hover { background: #00a3c4; }
+        .btn-sm { padding: 6px 10px; font-size: 11px; }
+        .btn-edit { background: rgba(243, 156, 18, 0.15); color: var(--warning); border: 1px solid var(--warning); margin-right: 5px; }
+        .btn-edit:hover { background: var(--warning); color: white; }
+        .btn-del { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-del:hover { background: var(--danger); color: white; }
 
-        .breakdown { display: flex; gap: 40px; margin-top: 20px; }
-        .breakdown-item h4 { font-size: 24px; font-weight: 600; }
-        .breakdown-item p { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
-        .breakdown-item span { font-size: 10px; color: var(--text-muted); display: block; margin-top: 2px; }
-
-        /* Line Chart Container */
-        .chart-container-line {
-            grid-column: 1 / 2;
-            height: 200px;
-            position: relative;
-            margin-top: -40px;
-            z-index: 2;
-        }
-
-        /* Right Floating Card */
-        .right-card {
-            grid-column: 2 / 3;
-            grid-row: 1 / 3;
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .right-card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .right-card-header img { width: 50px; height: 50px; border-radius: 12px; }
-        .right-card-header h3 { font-size: 16px; }
-        .right-card-header p { font-size: 12px; color: var(--text-muted); }
-        .right-card-body p { font-size: 14px; line-height: 1.6; color: #d1d5db; margin-bottom: 20px; }
-        .right-card-btn {
-            background: white; color: black;
-            border: none; padding: 12px; border-radius: 12px;
-            font-weight: 600; cursor: pointer; transition: 0.3s;
-            width: 100%;
-        }
-        .right-card-btn:hover { background: #e2e8f0; }
-
-        /* Bottom Widgets (Charts) */
-        .bottom-widgets {
-            grid-column: 1 / 2;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .widget {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-        .widget h4 { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; display: flex; justify-content: space-between; }
-
-        /* Chart specific sizes */
-        .pie-chart-box, .bar-chart-box { height: 120px; width: 100%; position: relative;}
-
+        /* Utility */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<!-- Left Sidebar -->
+<!-- Sidebar -->
 <aside class="sidebar">
-    <div class="logo-icon"><i class="fa-solid fa-droplet"></i></div>
-    <div class="nav-icons">
-        <i class="fa-solid fa-house active"></i>
-        <i class="fa-solid fa-chart-pie"></i>
-        <i class="fa-solid fa-file-invoice"></i>
-        <i class="fa-solid fa-users"></i>
-        <i class="fa-solid fa-gear"></i>
+    <div class="logo"><i class="fa-solid fa-droplet"></i> AquaTrack</div>
+    <div class="nav-menu">
+        <div class="nav-item active" onclick="switchTab('overview', this)"><i class="fa-solid fa-chart-pie"></i> Overview</div>
+        <div class="nav-item" onclick="switchTab('properties', this)"><i class="fa-solid fa-building"></i> Properties</div>
+        <div class="nav-item" onclick="switchTab('residents', this)"><i class="fa-solid fa-users"></i> Residents</div>
+        <div class="nav-item" onclick="switchTab('readings', this)"><i class="fa-solid fa-gauge-high"></i> Meter Readings</div>
+        <div class="nav-item" onclick="switchTab('bills', this)"><i class="fa-solid fa-file-invoice-dollar"></i> Bills & Payments</div>
+        <div class="nav-item" onclick="switchTab('water', this)"><i class="fa-solid fa-truck-droplet"></i> Water Purchase</div>
+        <div class="nav-item logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
     </div>
 </aside>
 
 <!-- Main Content -->
 <main class="main-content">
-    <!-- Top Navigation -->
-    <header class="top-nav">
-        <div class="nav-links">
-            <span class="active">Overview</span>
-            <span>Usage</span>
-            <span>Billing</span>
-            <span>Residents</span>
-            <span>Reports</span>
-        </div>
-        <div class="user-controls">
-            <button class="chat-btn"><i class="fa-solid fa-bolt"></i> Quick Action</button>
-            <i class="fa-regular fa-bell" style="color: var(--text-muted); font-size: 20px;"></i>
-            <div class="user-avatar"></div>
-        </div>
-    </header>
+    <div class="top-header">
+        <h1 id="pageTitle">Dashboard Overview</h1>
+        <div style="font-weight: 500; font-size: 14px;">Welcome, <span id="adminName" style="color: var(--primary);">Admin</span></div>
+    </div>
 
-    <!-- Dashboard Body -->
-    <div class="dashboard-body">
-
-        <!-- Background Graphic -->
-        <div class="bg-graphic"></div>
-
-        <!-- Floating Tags (Replaced with Water context) -->
-        <div class="floating-tag tag-1">
-            <img src="https://i.pravatar.cc/100?img=1" class="tag-avatar">
-            <span><i class="fa-solid fa-gauge-high" style="color: #00d2ff;"></i> Meter-04</span>
-        </div>
-        <div class="floating-tag tag-2">
-            <img src="https://i.pravatar.cc/100?img=2" class="tag-avatar">
-            <span><i class="fa-solid fa-file-invoice-dollar" style="color: #00ff87;"></i> Bill Paid</span>
-        </div>
-        <div class="floating-tag tag-3">
-            <img src="https://i.pravatar.cc/100?img=3" class="tag-avatar">
-            <span><i class="fa-solid fa-triangle-exclamation" style="color: #ff4757;"></i> Leak Alert</span>
-        </div>
-
-        <!-- Hero Stats -->
-        <div class="hero-stats">
-            <span class="trend"><i class="fa-solid fa-arrow-trend-up"></i> +12% vs Last Month</span>
-            <h1>4,240<span> kL</span></h1>
-            <p style="color: var(--text-muted); font-size: 14px;">Total Water Consumed This Month</p>
-
-            <div class="breakdown">
-                <div class="breakdown-item">
-                    <h4>3,100 kL</h4>
-                    <p>Residential</p>
-                    <span>Active</span>
-                </div>
-                <div class="breakdown-item">
-                    <h4>1,140 kL</h4>
-                    <p>Commercial</p>
-                    <span>Active</span>
-                </div>
+    <!-- 1. OVERVIEW TAB -->
+    <div id="tab-overview" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h4>Total Properties</h4>
+                <h2 id="ov-properties">0</h2>
+            </div>
+            <div class="stat-card green">
+                <h4>Total Residents</h4>
+                <h2 id="ov-residents">0</h2>
+            </div>
+            <div class="stat-card orange">
+                <h4>Total Revenue</h4>
+                <h2 id="ov-revenue">₹0</h2>
+            </div>
+            <div class="stat-card red">
+                <h4>Unpaid Bills</h4>
+                <h2 id="ov-unpaid">0</h2>
             </div>
         </div>
 
-        <!-- Line Chart -->
-        <div class="chart-container-line">
-            <canvas id="lineChart"></canvas>
-        </div>
-
-        <!-- Right Floating Card -->
-        <div class="right-card">
-            <div>
-                <div class="right-card-header">
-                    <img src="https://i.pravatar.cc/100?img=8" alt="Admin">
-                    <div>
-                        <h3>Admin Dashboard</h3>
-                        <p>System Status</p>
-                    </div>
-                </div>
-                <div class="right-card-body">
-                    <p>The main pipeline is currently <b>Active</b>. All meter readings are synced. No critical leaks detected in the last 24 hours.</p>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Revenue Trend</h3>
+                <div class="chart-container">
+                    <canvas id="lineChart"></canvas>
                 </div>
             </div>
-            <button class="right-card-btn">View All Reports <i class="fa-solid fa-arrow-right"></i></button>
-        </div>
-
-        <!-- Bottom Widgets (Pie & Bar Charts) -->
-        <div class="bottom-widgets">
-            <!-- Pie Chart Widget -->
-            <div class="widget">
-                <h4>Bill Status <span>This Month</span></h4>
-                <div class="pie-chart-box">
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-chart-pie" style="color: var(--accent);"></i> Bill Status</h3>
+                <div class="chart-container-small">
                     <canvas id="pieChart"></canvas>
                 </div>
             </div>
-
-            <!-- Bar Chart Widget -->
-            <div class="widget">
-                <h4>Top Consumers <span>kL</span></h4>
-                <div class="bar-chart-box">
+            <div class="chart-card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-chart-bar" style="color: var(--warning);"></i> Top Water Consumers (kL)</h3>
+                <div class="chart-container" style="height: 200px;">
                     <canvas id="barChart"></canvas>
                 </div>
             </div>
         </div>
-
     </div>
+
+    <!-- 2. PROPERTIES TAB -->
+    <div id="tab-properties" class="tab-content">
+        <div class="table-card">
+            <div class="table-header">
+                <h3>All Properties History</h3>
+                <a href="/add-property.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Property</a>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Property No</th><th>Address</th><th>Meter No</th><th>Flat Size</th><th>Actions</th></tr></thead>
+                <tbody id="tb-properties"><tr><td colspan="6">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. RESIDENTS TAB -->
+    <div id="tab-residents" class="tab-content">
+        <div class="table-card">
+            <div class="table-header">
+                <h3>All Residents History</h3>
+                <a href="/add-resident.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Resident</a>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
+                <tbody id="tb-residents"><tr><td colspan="6">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. METER READINGS TAB -->
+    <div id="tab-readings" class="tab-content">
+        <div class="table-card">
+            <div class="table-header">
+                <h3>All Meter Readings</h3>
+                <a href="/add-meter-reading.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Reading</a>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Property</th><th>Date</th><th>Prev</th><th>Current</th><th>Units</th><th>Actions</th></tr></thead>
+                <tbody id="tb-readings"><tr><td colspan="7">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 5. BILLS TAB -->
+    <div id="tab-bills" class="tab-content">
+        <div class="table-card">
+            <div class="table-header">
+                <h3>All Bills & Payments</h3>
+                <a href="/add-bill.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Generate New Bill</a>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Property</th><th>Month</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="tb-bills"><tr><td colspan="6">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 6. WATER PURCHASE TAB -->
+    <div id="tab-water" class="tab-content">
+        <div class="table-card">
+            <div class="table-header">
+                <h3>Water Purchase History</h3>
+                <a href="/water-purchase.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Purchase</a>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Source</th><th>Volume (L)</th><th>Unit Cost</th><th>Total Cost</th><th>Date</th></tr></thead>
+                <tbody id="tb-water"><tr><td colspan="6">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
 </main>
 
-<!-- Chart.js Logic -->
 <script>
-    // Common Chart Settings for Dark Theme
-    Chart.defaults.color = '#8b9eb7';
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    // --- Auth Check ---
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) { window.location.href = "/login.html"; }
+    else { document.getElementById("adminName").innerText = user.username || "Admin"; }
 
-    // 1. Line Chart (Main Graphic)
-    const ctxLine = document.getElementById('lineChart').getContext('2d');
-    let gradientLine = ctxLine.createLinearGradient(0, 0, 0, 200);
-    gradientLine.addColorStop(0, 'rgba(0, 210, 255, 0.5)');
-    gradientLine.addColorStop(1, 'rgba(0, 210, 255, 0)');
+    // --- Tab Switching Logic ---
+    function switchTab(tabId, element) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        // Remove active from all nav items
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
 
-    new Chart(ctxLine, {
-        type: 'line',
-        data: {
-            labels: ['1 Aug', '8 Aug', '15 Aug', '22 Aug', '29 Aug'],
-            datasets: [{
-                label: 'Consumption',
-                data: [1200, 1900, 1700, 2100, 2420],
-                borderColor: '#00d2ff',
-                backgroundColor: gradientLine,
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#07111e',
-                pointBorderColor: '#00d2ff',
-                pointBorderWidth: 2,
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { display: false, drawBorder: false }, ticks: { color: '#8b9eb7' } },
-                y: { grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, ticks: { display: false } }
+        // Show selected tab & active nav
+        document.getElementById('tab-' + tabId).classList.add('active');
+        element.classList.add('active');
+
+        // Update Title
+        const titles = {
+            'overview': 'Dashboard Overview',
+            'properties': 'Properties Management',
+            'residents': 'Residents Management',
+            'readings': 'Meter Readings Log',
+            'bills': 'Billing & Payments',
+            'water': 'Water Procurement'
+        };
+        document.getElementById('pageTitle').innerText = titles[tabId];
+    }
+
+    // --- CRUD Logic Functions ---
+    function delProperty(id) { if(confirm('Delete Property?')) fetch('/api/properties/'+id, {method:'DELETE'}).then(loadAllData); }
+    function delResident(id) { if(confirm('Delete Resident?')) fetch('/api/residents/'+id, {method:'DELETE'}).then(loadAllData); }
+    function delReading(id) { if(confirm('Delete Reading?')) fetch('/api/meter-readings/'+id, {method:'DELETE'}).then(loadAllData); }
+    function delBill(id) { if(confirm('Delete Bill?')) fetch('/api/bills/'+id, {method:'DELETE'}).then(loadAllData); }
+
+    function editBill(id, month, status) {
+        let newMonth = prompt("Update Month:", month);
+        let newStatus = prompt("Update Status (PAID/UNPAID):", status);
+        if(newMonth && newStatus) {
+            fetch('/api/bills/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({billingMonth: newMonth, status: newStatus}) }).then(loadAllData);
+        }
+    }
+
+    function editReading(id, prev, curr) {
+        let newPrev = prompt("Update Previous Reading:", prev);
+        let newCurr = prompt("Update Current Reading:", curr);
+        if(newPrev && newCurr) {
+            fetch('/api/meter-readings/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({previousReading: newPrev, currentReading: newCurr}) }).then(loadAllData);
+        }
+    }
+
+    function logout() { localStorage.removeItem("user"); window.location.href = "/login.html"; }
+
+    // --- Data Loading & Rendering ---
+    let lineChartInstance, pieChartInstance, barChartInstance;
+
+    async function loadAllData() {
+        try {
+            // Fetch all APIs concurrently
+            const [resProps, resResidents, resReadings, resBills, resWater] = await Promise.all([
+                fetch('/api/properties').then(r => r.json()).catch(() => []),
+                fetch('/api/residents').then(r => r.json()).catch(() => []),
+                fetch('/api/meter-readings').then(r => r.json()).catch(() => []),
+                fetch('/api/bills').then(r => r.json()).catch(() => []),
+                fetch('/api/water-purchases').then(r => r.json()).catch(() => []) // If API exists
+            ]);
+
+            // 1. Update Overview Stats
+            document.getElementById('ov-properties').innerText = resProps.length;
+            document.getElementById('ov-residents').innerText = resResidents.length;
+
+            let totalRev = 0, unpaid = 0;
+            let paidCount = 0;
+
+            resBills.forEach(b => {
+                totalRev += b.totalAmount;
+                if (b.status === 'UNPAID') unpaid++;
+                if (b.status === 'PAID') paidCount++;
+            });
+
+            document.getElementById('ov-revenue').innerText = '₹' + totalRev.toFixed(0);
+            document.getElementById('ov-unpaid').innerText = unpaid;
+
+            // 2. Render Properties Table
+            document.getElementById('tb-properties').innerHTML = resProps.map(p => `
+                <tr>
+                    <td>#${p.id}</td>
+                    <td>${p.propertyNo}</td>
+                    <td>${p.address}</td>
+                    <td>${p.meterNumber}</td>
+                    <td>${p.flatSize}</td>
+                    <td>
+                        <button class="btn btn-sm btn-del" onclick="delProperty(${p.id})"><i class="fa-solid fa-trash"></i> Del</button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="6">No properties found</td></tr>';
+
+            // 3. Render Residents Table
+            document.getElementById('tb-residents').innerHTML = resResidents.map(r => `
+                <tr>
+                    <td>#${r.id}</td>
+                    <td>${r.name || 'N/A'}</td>
+                    <td>${r.username}</td>
+                    <td>${r.email || 'N/A'}</td>
+                    <td>${r.phone || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-del" onclick="delResident(${r.id})"><i class="fa-solid fa-trash"></i> Del</button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="6">No residents found</td></tr>';
+
+            // 4. Render Readings Table
+            document.getElementById('tb-readings').innerHTML = resReadings.slice().reverse().map(r => `
+                <tr>
+                    <td>#${r.id}</td>
+                    <td>${r.property ? r.property.propertyNo : 'N/A'}</td>
+                    <td>${r.readingDate}</td>
+                    <td>${r.previousReading}</td>
+                    <td>${r.currentReading}</td>
+                    <td><strong>${r.unitsConsumed}</strong></td>
+                    <td>
+                        <button class="btn btn-sm btn-edit" onclick="editReading(${r.id}, ${r.previousReading}, ${r.currentReading})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-sm btn-del" onclick="delReading(${r.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="7">No readings found</td></tr>';
+
+            // 5. Render Bills Table
+            document.getElementById('tb-bills').innerHTML = resBills.slice().reverse().map(b => `
+                <tr>
+                    <td>#${b.id}</td>
+                    <td>${b.property ? b.property.propertyNo : 'N/A'}</td>
+                    <td>${b.billingMonth}</td>
+                    <td>₹${b.totalAmount}</td>
+                    <td><span class="badge ${b.status}">${b.status}</span></td>
+                    <td>
+                        <a href="/api/invoices/${b.id}/pdf" target="_blank" class="btn btn-sm btn-primary" style="margin-right: 5px;"><i class="fa-solid fa-file-pdf"></i></a>
+                        <button class="btn btn-sm btn-edit" onclick="editBill(${b.id}, '${b.billingMonth}', '${b.status}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-sm btn-del" onclick="delBill(${b.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="6">No bills found</td></tr>';
+
+            // 6. Render Water Table
+            document.getElementById('tb-water').innerHTML = resWater.map(w => `
+                <tr>
+                    <td>#${w.id}</td>
+                    <td>${w.source}</td>
+                    <td>${w.purchasedVolume}</td>
+                    <td>₹${w.unitCost}</td>
+                    <td>₹${w.totalCost}</td>
+                    <td>${w.purchaseDate}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="6">No water purchases found</td></tr>';
+
+            // 7. Render Charts
+            renderCharts(resBills, resReadings, paidCount, unpaid);
+
+        } catch (error) {
+            console.error("Data loading error:", error);
+        }
+    }
+
+    // --- Chart.js Rendering ---
+    function renderCharts(bills, readings, paid, unpaid) {
+        // Destroy old charts if they exist (to prevent overlapping)
+        if (lineChartInstance) lineChartInstance.destroy();
+        if (pieChartInstance) pieChartInstance.destroy();
+        if (barChartInstance) barChartInstance.destroy();
+
+        Chart.defaults.color = '#8b9eb7';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // A. Line Chart (Revenue Trend from Bills)
+        const ctxLine = document.getElementById('lineChart').getContext('2d');
+        // Aggregate revenue by month
+        const revenueByMonth = {};
+        bills.forEach(b => {
+            if(!revenueByMonth[b.billingMonth]) revenueByMonth[b.billingMonth] = 0;
+            revenueByMonth[b.billingMonth] += b.totalAmount;
+        });
+
+        // Sort months chronologically (basic string sort works for "Month Year")
+        const sortedMonths = Object.keys(revenueByMonth).sort();
+        const lineData = sortedMonths.map(m => revenueByMonth[m]);
+
+        let gradient = ctxLine.createLinearGradient(0, 0, 0, 250);
+        gradient.addColorStop(0, 'rgba(0, 210, 255, 0.5)');
+        gradient.addColorStop(1, 'rgba(0, 210, 255, 0)');
+
+        lineChartInstance = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: sortedMonths.length ? sortedMonths : ['No Data'],
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: lineData.length ? lineData : [0],
+                    borderColor: '#00d2ff',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#07111e',
+                    pointBorderColor: '#00d2ff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
             }
-        }
-    });
+        });
 
-    // 2. Pie Chart (Bill Status)
-    const ctxPie = document.getElementById('pieChart').getContext('2d');
-    new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-            labels: ['Paid', 'Unpaid'],
-            datasets: [{
-                data: [75, 25],
-                backgroundColor: ['#00ff87', '#ff4757'],
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%',
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // 3. Bar Chart (Top Consumers)
-    const ctxBar = document.getElementById('barChart').getContext('2d');
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: ['P-101', 'P-102', 'P-103', 'P-201'],
-            datasets: [{
-                data: [150, 220, 180, 320],
-                backgroundColor: [
-                    'rgba(0, 210, 255, 0.8)',
-                    'rgba(0, 210, 255, 0.6)',
-                    'rgba(0, 210, 255, 0.4)',
-                    'rgba(0, 210, 255, 0.2)'
-                ],
-                borderRadius: 4,
-                barThickness: 15
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { display: false, drawBorder: false } },
-                y: { display: false, beginAtZero: true }
+        // B. Pie Chart (Paid vs Unpaid)
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        pieChartInstance = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Unpaid'],
+                datasets: [{
+                    data: [paid, unpaid],
+                    backgroundColor: ['#00ff87', '#ff4757'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: { legend: { position: 'bottom' } }
             }
-        }
-    });
+        });
+
+        // C. Bar Chart (Top 5 Consumers)
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        // Sort readings by unitsConsumed (highest first), take top 5
+        const topReadings = [...readings].sort((a, b) => b.unitsConsumed - a.unitsConsumed).slice(0, 5);
+        const barLabels = topReadings.map(r => r.property ? r.property.propertyNo : 'Unknown');
+        const barData = topReadings.map(r => r.unitsConsumed);
+
+        barChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: barLabels.length ? barLabels : ['No Data'],
+                datasets: [{
+                    label: 'Consumption (kL)',
+                    data: barData.length ? barData : [0],
+                    backgroundColor: 'rgba(0, 210, 255, 0.7)',
+                    borderRadius: 6,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Initialize Dashboard
+    loadAllData();
 </script>
 </body>
 </html>
